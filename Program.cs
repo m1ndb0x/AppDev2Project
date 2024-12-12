@@ -1,4 +1,19 @@
+using Azure.Identity;
+using Microsoft.EntityFrameworkCore;
+
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Azure Key Vault
+builder.Configuration.AddAzureKeyVault(
+    new Uri("https://your-keyvault-name.vault.azure.net/"), // Replace with key vault URL. TODO Miiiiiiike!
+    new DefaultAzureCredential()
+);
+
+// Register DbContext with SQL Server
+builder.Services.AddDbContext<ExaminaDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
