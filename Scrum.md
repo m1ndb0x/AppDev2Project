@@ -8,10 +8,10 @@
 
 2024/12/12 Alexandre
 1. Done since last scrum
-- 
-2. Plan until next Scrum
 - Finalize tables
 - scaffold in project
+2. Plan until next Scrum
+-  register/login logic
 3. Need assistance / figure things out
 - 
 
