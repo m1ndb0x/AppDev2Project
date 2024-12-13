@@ -1,6 +1,7 @@
 using Azure.Identity;
 using Microsoft.EntityFrameworkCore;
 using AppDev2Project.Models;
+using Microsoft.AspNetCore.Identity;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +20,12 @@ builder.Configuration.AddAzureKeyVault(
 builder.Services.AddDbContext<ExaminaDatabaseContext>(options =>
     options.UseSqlServer(builder.Configuration["DefaultConnection"]));
 
+
+// Add Identity
+builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+    .AddEntityFrameworkStores<ExaminaDatabaseContext>()
+    .AddDefaultTokenProviders();
+    
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddControllersWithViews(); 
@@ -45,6 +52,7 @@ app.MapControllerRoute(
     name: "teacher",
     pattern: "{controller=Teacher}/{action=Index}/{id?}");
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
