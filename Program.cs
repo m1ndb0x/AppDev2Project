@@ -1,20 +1,27 @@
 using Azure.Identity;
 using Microsoft.EntityFrameworkCore;
-using AppDev2Project;
+using AppDev2Project.Models;
 
 
 var builder = WebApplication.CreateBuilder(args);
 
-/*
-// Azure Key Vault
+
+
+// Azure Key Vault for securing private info
 builder.Configuration.AddAzureKeyVault(
-    new Uri("https://your-keyvault-name.vault.azure.net/"), // Replace with key vault URL. TODO 
+    new Uri("https://examina-keyvault.vault.azure.net/"),
     new DefaultAzureCredential()
 );
-*/
+
+
+
+// Register DbContext with connection string stored in appsettings.json
+builder.Services.AddDbContext<ExaminaDatabaseContext>(options =>
+    options.UseSqlServer(builder.Configuration["DefaultConnection"]));
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+
 
 var app = builder.Build();
 
@@ -28,11 +35,12 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseStaticFiles(); // Serves static files (CSS, JS, etc.)
+
 app.UseRouting();
 
 app.UseAuthorization();
 
-app.MapStaticAssets();
 app.MapRazorPages()
    .WithStaticAssets();
 
