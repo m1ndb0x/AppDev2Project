@@ -2,7 +2,7 @@
 1. Done since last scrum
 - 
 2. Plan until next Scrum
-- 
+- start on teacher dash
 3. Need assistance / figure things out
 - 
 

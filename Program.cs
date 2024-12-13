@@ -15,6 +15,7 @@ builder.Configuration.AddAzureKeyVault(
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddControllersWithViews(); 
 
 var app = builder.Build();
 
@@ -30,10 +31,14 @@ app.UseHttpsRedirection();
 
 app.UseRouting();
 
+// teacher controller
+app.MapControllerRoute(
+    name: "teacher",
+    pattern: "{controller=Teacher}/{action=Index}/{id?}");
+
 app.UseAuthorization();
 
 app.MapStaticAssets();
-app.MapRazorPages()
-   .WithStaticAssets();
+app.MapRazorPages();
 
 app.Run();

@@ -1,0 +1,34 @@
+@page
+@model AppDev2Project.Pages.Teacher.ManageExamsModel
+@{
+    ViewData["Title"] = "Manage Exams";
+}
+
+<h2 class="text-2xl font-bold mb-4">Manage Exams</h2>
+
+<table class="min-w-full bg-white border border-gray-200">
+    <thead>
+        <tr>
+            <th class="py-2 px-4 border-b">Title</th>
+            <th class="py-2 px-4 border-b">Description</th>
+            <th class="py-2 px-4 border-b">Subject</th>
+            <th class="py-2 px-4 border-b">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var exam in Model.Exams)
+        {
+            <tr>
+                <td class="py-2 px-4 border-b">@exam.Title</td>
+                <td class="py-2 px-4 border-b">@exam.Description</td>
+                <td class="py-2 px-4 border-b">@exam.Subject</td>
+                <td class="py-2 px-4 border-b">
+                    <a href="/Teacher/EditExam?id=@exam.Id" class="text-blue-500 hover:underline">Edit</a>
+                    <a href="/Teacher/DeleteExam?id=@exam.Id" class="text-red-500 hover:underline ml-2">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a href="/Teacher/CreateExam" class="mt-4 inline-block bg-blue-500 text-white py-2 px-4 rounded">Create New Exam</a>

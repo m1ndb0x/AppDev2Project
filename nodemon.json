@@ -1,0 +1,5 @@
+{
+  "watch": ["Pages", "wwwroot", "Views"],
+  "ext": "cshtml,cs,js,css",
+  "exec": "dotnet run"
+}
