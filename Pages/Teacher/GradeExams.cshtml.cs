@@ -14,7 +14,7 @@ namespace AppDev2Project.Pages.Teacher
             _context = context;
         }
 
-        public IList<CompletedExam> CompletedExams { get; set; }
+        public List<CompletedExam> CompletedExams { get; set; } = new List<CompletedExam>();
 
         public async Task OnGetAsync()
         {

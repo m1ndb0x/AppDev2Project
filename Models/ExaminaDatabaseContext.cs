@@ -17,7 +17,7 @@ namespace AppDev2Project.Models
         public virtual DbSet<Exam> Exams { get; set; }
         public virtual DbSet<ExamAttempt> ExamAttempts { get; set; }
         public virtual DbSet<Question> Questions { get; set; }
-        public virtual DbSet<User> Users { get; set; }
+        public new DbSet<IdentityUser> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
