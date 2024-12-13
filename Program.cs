@@ -21,6 +21,7 @@ builder.Services.AddDbContext<ExaminaDatabaseContext>(options =>
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddControllersWithViews(); 
 
 
 var app = builder.Build();
@@ -39,9 +40,14 @@ app.UseStaticFiles(); // Serves static files (CSS, JS, etc.)
 
 app.UseRouting();
 
+// teacher controller
+app.MapControllerRoute(
+    name: "teacher",
+    pattern: "{controller=Teacher}/{action=Index}/{id?}");
+
 app.UseAuthorization();
 
-app.MapRazorPages()
-   .WithStaticAssets();
+app.MapStaticAssets();
+app.MapRazorPages();
 
 app.Run();

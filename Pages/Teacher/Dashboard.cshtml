@@ -1,0 +1,75 @@
+@page
+@model AppDev2Project.Pages.Teacher.DashboardModel
+@{
+    ViewData["Title"] = "Teacher Dashboard";
+}
+
+<div class="flex min-h-screen bg-gray-100">
+    <!-- Sidebar -->
+    <div class="w-64 bg-gray-800 text-white flex flex-col">
+        <div class="flex items-center p-4">
+            <img src="/path/to/avatar.png" alt="Teacher Avatar" class="w-12 h-12 rounded-full mr-4">
+            <span class="font-bold">Teacher Name</span>
+        </div>
+        <nav class="mt-4">
+            <a href="/Category" class="block py-2 px-4 hover:bg-gray-700">Category</a>
+            <a href="/Subject" class="block py-2 px-4 hover:bg-gray-700">Subject</a>
+            <a href="/Exam" class="block py-2 px-4 hover:bg-gray-700">Exam</a>
+            <a href="/Question" class="block py-2 px-4 hover:bg-gray-700">Question</a>
+            <a href="/Result" class="block py-2 px-4 hover:bg-gray-700">Result</a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold">Online Exam System</h1>
+            <div>
+                <a href="/AdminPanel" class="text-blue-500 hover:underline mr-4">Admin Panel</a>
+                <a href="/Logout" class="text-red-500 hover:underline">Log out</a>
+            </div>
+        </div>
+
+        <!-- Content Section -->
+        <div class="bg-white rounded shadow p-4">
+            <div class="bg-red-500 text-white py-2 px-4 rounded-t font-bold">
+                Exam Question
+            </div>
+            <table class="w-full border-collapse border border-gray-300">
+                <thead>
+                    <tr class="bg-gray-100">
+                        <th class="border border-gray-300 py-2 px-4 text-left">Exam Name</th>
+                        <th class="border border-gray-300 py-2 px-4 text-left">Question</th>
+                        <th class="border border-gray-300 py-2 px-4 text-center">Options</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="border border-gray-300 py-2 px-4">Sample 1</td>
+                        <td class="border border-gray-300 py-2 px-4">Variable for integers</td>
+                        <td class="border border-gray-300 py-2 px-4 text-center">
+                            <button class="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600">Edit</button>
+                            <button class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 ml-2">Delete</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="border border-gray-300 py-2 px-4">Sample 1</td>
+                        <td class="border border-gray-300 py-2 px-4">In programming "1" + "1"?</td>
+                        <td class="border border-gray-300 py-2 px-4 text-center">
+                            <button class="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600">Edit</button>
+                            <button class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 ml-2">Delete</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="border border-gray-300 py-2 px-4">Sample 1</td>
+                        <td class="border border-gray-300 py-2 px-4">Using Java Programming give me a sample output of "Hello World"</td>
+                        <td class="border border-gray-300 py-2 px-4 text-center">
+                            <button class="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600">Edit</button>
+                            <button class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 ml-2">Delete</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,33 @@
+@page
+@model AppDev2Project.Pages.Teacher.GradeExamsModel
+@{
+    ViewData["Title"] = "Grade Exams";
+}
+
+<h2 class="text-2xl font-bold mb-4">Grade Exams</h2>
+
+<table class="min-w-full bg-white border border-gray-200">
+    <thead>
+        <tr>
+            <th class="py-2 px-4 border-b">Exam</th>
+            <th class="py-2 px-4 border-b">Student</th>
+            <th class="py-2 px-4 border-b">Status</th>
+            <th class="py-2 px-4 border-b">Grade</th>
+            <th class="py-2 px-4 border-b">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var completedExam in Model.CompletedExams)
+        {
+            <tr>
+                <td class="py-2 px-4 border-b">@completedExam.Exam.Title</td>
+                <td class="py-2 px-4 border-b">@completedExam.User.Name</td>
+                <td class="py-2 px-4 border-b">@completedExam.ExamStatus</td>
+                <td class="py-2 px-4 border-b">@completedExam.TotalGrade</td>
+                <td class="py-2 px-4 border-b">
+                    <a href="/Teacher/GradeExam?id=@completedExam.Id" class="text-blue-500 hover:underline">Grade</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
