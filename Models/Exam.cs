@@ -13,11 +13,13 @@ public partial class Exam
 
     public string? Subject { get; set; }
 
-    public int? TeacherId { get; set; }
+    public int TeacherId { get; set; }
 
-    public bool? IsClosed { get; set; }
+    public string State { get; set; } = null!; // Ensure state is either 'draft', 'available', or 'closed'
 
-    public DateTime? CreatedAt { get; set; }
+    public double TotalScoreWeight { get; set; }
+
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
 
     public virtual ICollection<CompletedExam> CompletedExams { get; set; } = new List<CompletedExam>();
 
@@ -25,5 +27,5 @@ public partial class Exam
 
     public virtual ICollection<Question> Questions { get; set; } = new List<Question>();
 
-    public virtual User? Teacher { get; set; }
+    public virtual User Teacher { get; set; } = null!;
 }

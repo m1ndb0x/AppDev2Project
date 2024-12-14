@@ -28,7 +28,6 @@ namespace AppDev2Project.Controllers
             {
                 var user = new User
                 {
-                    UserName = model.Email, //alex: Identity.core requires `UserName` (can be Email for login)
                     Email = model.Email,
                     Name = model.Name //alex: Are we storing the full name in the custom field?
                 };

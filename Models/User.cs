@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Identity;
+using System;
 using System.Collections.Generic;
 
 /* alex:
@@ -12,28 +13,13 @@ Savvy?
 
 namespace AppDev2Project.Models;
 
-public partial class User
+public partial class User : IdentityUser<int> // Derive from IdentityUser<int>
 {
-    public int Id { get; set; }
-
     public string Name { get; set; } = null!;
 
-    /* alex:
-    So `UserName` is required by ASP.NET Identity for authentication.
-    It's used as unique identifier during login. 
-    We COULD (and I did) set `UserName` as the email for login purposes ( view: AccountController.cs ).
-    The custom 'Name' property is for storing the user's full name and isn't used for auth.
-    */
+    public string Role { get; set; } = null!; // Ensure role is either 'student' or 'teacher'
 
-    public string UserName { get; set; } = null!;
-
-    public string Email { get; set; } = null!;
-
-    public string Password { get; set; } = null!;
-
-    public string Role { get; set; } = null!;
-
-    public DateTime? CreatedAt { get; set; }
+    public DateTime? CreatedAt { get; set; } = DateTime.Now;
 
     public virtual ICollection<CompletedExam> CompletedExams { get; set; } = new List<CompletedExam>();
 

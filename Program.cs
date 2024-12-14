@@ -2,31 +2,24 @@ using Azure.Identity;
 using Microsoft.EntityFrameworkCore;
 using AppDev2Project.Models;
 using Microsoft.AspNetCore.Identity;
-using Azure.Extensions.AspNetCore.Configuration.Secrets;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Retrieve Key Vault URI from configuration
-string keyVaultUri = builder.Configuration["KeyVaultUri"];
-if (string.IsNullOrEmpty(keyVaultUri))
-{
-    throw new ArgumentNullException(nameof(keyVaultUri), "KeyVaultUri is not set in the configuration.");
-}
-
-// Add Azure Key Vault to the configuration
-builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri), new DefaultAzureCredential());
-
-// Add DbContext with the connection string from Key Vault
+// Register DbContext with connection string stored in appsettings.json
 builder.Services.AddDbContext<ExaminaDatabaseContext>(options =>
-    options.UseSqlServer(builder.Configuration["connection-string"]));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add Identity
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+builder.Services.AddIdentity<User, IdentityRole<int>>()
     .AddEntityFrameworkStores<ExaminaDatabaseContext>()
     .AddDefaultTokenProviders();
 
+// Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddControllersWithViews();
+
+// Add a service to store the database connection status
+builder.Services.AddSingleton<DatabaseConnectionStatus>();
 
 var app = builder.Build();
 
@@ -34,13 +27,16 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ExaminaDatabaseContext>();
+    var dbStatus = scope.ServiceProvider.GetRequiredService<DatabaseConnectionStatus>();
     try
     {
         dbContext.Database.CanConnect();
+        dbStatus.IsConnected = true;
         Console.WriteLine("Database connection successful.");
     }
     catch (Exception ex)
     {
+        dbStatus.IsConnected = false;
         Console.WriteLine($"Database connection failed: {ex.Message}");
     }
 }
@@ -59,9 +55,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllerRoute(
-    name: "teacher",
-    pattern: "{controller=Teacher}/{action=Index}/{id?}");
+app.MapRazorPages();
 
 app.MapRazorPages();
 app.Run();

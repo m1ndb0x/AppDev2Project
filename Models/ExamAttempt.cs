@@ -7,27 +7,19 @@ public partial class ExamAttempt
 {
     public int Id { get; set; }
 
-    public int? ExamId { get; set; }
+    public int QuestionId { get; set; }
 
-    public int? UserId { get; set; }
-
-    public int? QuestionId { get; set; }
+    public int UserId { get; set; }
 
     public string? AnswerText { get; set; }
 
-    public string? FilePath { get; set; }
+    public bool IsGraded { get; set; } = false;
 
     public double? Grade { get; set; }
 
-    public string? Status { get; set; }
+    public DateTime SubmittedAt { get; set; } = DateTime.Now;
 
-    public DateTime? AnswerModifiedAt { get; set; }
+    public virtual Question Question { get; set; } = null!;
 
-    public DateTime? SubmittedAt { get; set; }
-
-    public virtual Exam? Exam { get; set; }
-
-    public virtual Question? Question { get; set; }
-
-    public virtual User? User { get; set; }
+    public virtual User User { get; set; } = null!;
 }

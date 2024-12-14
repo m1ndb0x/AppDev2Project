@@ -7,19 +7,17 @@ public partial class CompletedExam
 {
     public int Id { get; set; }
 
-    public int? ExamId { get; set; }
+    public int ExamId { get; set; }
 
-    public int? UserId { get; set; }
+    public int UserId { get; set; }
 
-    public string? ExamStatus { get; set; }
+    public bool IsCompleted { get; set; } = false;
 
-    public double? TotalGrade { get; set; }
+    public double? TotalScore { get; set; }
 
     public DateTime? GradedAt { get; set; }
 
-    public bool? NotificationSent { get; set; }
+    public virtual Exam Exam { get; set; } = null!;
 
-    public virtual Exam? Exam { get; set; }
-
-    public virtual User? User { get; set; }
+    public virtual User User { get; set; } = null!;
 }
