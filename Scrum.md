@@ -1,6 +1,8 @@
 2024/12/13 Dimitri
 1. Done since last scrum
-- 
+- teacher dash started
+- grade exams html
+- create exam
 2. Plan until next Scrum
 - 
 3. Need assistance / figure things out
