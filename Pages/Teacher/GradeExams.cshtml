@@ -11,8 +11,8 @@
         <tr>
             <th class="py-2 px-4 border-b">Exam</th>
             <th class="py-2 px-4 border-b">Student</th>
-            <th class="py-2 px-4 border-b">Status</th>
             <th class="py-2 px-4 border-b">Grade</th>
+            <th class="py-2 px-4 border-b">Graded At</th>
             <th class="py-2 px-4 border-b">Actions</th>
         </tr>
     </thead>
@@ -22,8 +22,8 @@
             <tr>
                 <td class="py-2 px-4 border-b">@completedExam.Exam.Title</td>
                 <td class="py-2 px-4 border-b">@completedExam.User.Name</td>
-                <td class="py-2 px-4 border-b">@completedExam.ExamStatus</td>
-                <td class="py-2 px-4 border-b">@completedExam.TotalGrade</td>
+                <td class="py-2 px-4 border-b">@completedExam.TotalScore</td>
+                <td class="py-2 px-4 border-b">@completedExam.GradedAt</td>
                 <td class="py-2 px-4 border-b">
                     <a href="/Teacher/GradeExam?id=@completedExam.Id" class="text-blue-500 hover:underline">Grade</a>
                 </td>

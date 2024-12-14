@@ -2,36 +2,28 @@ using Azure.Identity;
 using Microsoft.EntityFrameworkCore;
 using AppDev2Project.Models;
 using Microsoft.AspNetCore.Identity;
-using Azure.Extensions.AspNetCore.Configuration.Secrets; // Add this
-using Azure.Security.KeyVault.Secrets; // Add this
+using Azure.Extensions.AspNetCore.Configuration.Secrets;
+using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Configuration.AzureKeyVault;
-using AzureKeyVaultConfigurationOptions = Azure.Extensions.AspNetCore.Configuration.Secrets.AzureKeyVaultConfigurationOptions; // Add this
+using AzureKeyVaultConfigurationOptions = Azure.Extensions.AspNetCore.Configuration.Secrets.AzureKeyVaultConfigurationOptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Azure Key Vault for securing private info
-builder.Configuration.AddAzureKeyVault(
-    new Uri("https://examina-keyvault2.vault.azure.net/"),
-    new DefaultAzureCredential(),
-    new AzureKeyVaultConfigurationOptions
-    {
-        ReloadInterval = TimeSpan.FromMinutes(5),
-        Manager = new KeyVaultSecretManager()
-    }
-);
-
-// // Register DbContext with connection string stored in appsettings.json
-// builder.Services.AddDbContext<ExaminaDatabaseContext>(options =>
-//     options.UseSqlServer(builder.Configuration["DefaultConnection"]));
+// Register DbContext with connection string stored in appsettings.json
+builder.Services.AddDbContext<ExaminaDatabaseContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add Identity
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+builder.Services.AddIdentity<User, IdentityRole<int>>()
     .AddEntityFrameworkStores<ExaminaDatabaseContext>()
     .AddDefaultTokenProviders();
-    
+
 // Add services to the container.
 builder.Services.AddRazorPages();
-builder.Services.AddControllersWithViews(); 
+builder.Services.AddControllersWithViews();
+
+// Add a service to store the database connection status
+builder.Services.AddSingleton<DatabaseConnectionStatus>();
 
 var app = builder.Build();
 
@@ -39,13 +31,16 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ExaminaDatabaseContext>();
+    var dbStatus = scope.ServiceProvider.GetRequiredService<DatabaseConnectionStatus>();
     try
     {
         dbContext.Database.CanConnect();
+        dbStatus.IsConnected = true;
         Console.WriteLine("Database connection successful.");
     }
     catch (Exception ex)
     {
+        dbStatus.IsConnected = false;
         Console.WriteLine($"Database connection failed: {ex.Message}");
     }
 }
@@ -72,7 +67,6 @@ app.MapControllerRoute(
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapStaticAssets();
 app.MapRazorPages();
 
 app.Run();

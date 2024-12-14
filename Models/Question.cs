@@ -7,11 +7,11 @@ public partial class Question
 {
     public int Id { get; set; }
 
-    public int? ExamId { get; set; }
+    public int ExamId { get; set; }
 
     public string QuestionText { get; set; } = null!;
 
-    public string QuestionType { get; set; } = null!;
+    public string QuestionType { get; set; } = null!; // Ensure question_type is either 'multiple_choice' or 'short_answer'
 
     public string? ChoiceA { get; set; }
 
@@ -21,15 +21,13 @@ public partial class Question
 
     public string? ChoiceD { get; set; }
 
-    public string? CorrectChoiceAnswer { get; set; }
+    public string CorrectAnswer { get; set; } = null!;
 
-    public string? CorrectTextAnswer { get; set; }
-
-    public double? ScoreWeight { get; set; }
+    public double ScoreWeight { get; set; }
 
     public int? Order { get; set; }
 
-    public virtual Exam? Exam { get; set; }
+    public virtual Exam Exam { get; set; } = null!;
 
-    public virtual ICollection<ExamAttempt> ExamAttempts { get; set; } = new List<ExamAttempt>();
+    public virtual ICollection<ExamAttempt> ExamAttempts { get; set; } = new List<ExamAttempt>(); 
 }

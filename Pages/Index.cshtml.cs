@@ -1,19 +1,22 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using AppDev2Project.Models;
 
 namespace AppDev2Project.Pages;
 
 public class IndexModel : PageModel
 {
-    private readonly ILogger<IndexModel> _logger;
+    public bool IsDbConnected { get; private set; }
 
-    public IndexModel(ILogger<IndexModel> logger)
+    private readonly DatabaseConnectionStatus _dbStatus;
+
+    public IndexModel(DatabaseConnectionStatus dbStatus)
     {
-        _logger = logger;
+        _dbStatus = dbStatus;
     }
 
     public void OnGet()
     {
-
+        IsDbConnected = _dbStatus.IsConnected;
     }
 }
