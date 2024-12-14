@@ -10,10 +10,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Azure Key Vault for securing private info
 builder.Configuration.AddAzureKeyVault(
-    new Uri("https://examina-keyvault.vault.azure.net/"),
+    new Uri("https://examina-keyvault2.vault.azure.net/"),
     new DefaultAzureCredential()
 );
-
 
 
 // Register DbContext with connection string stored in appsettings.json
