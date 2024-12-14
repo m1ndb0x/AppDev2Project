@@ -1,3 +1,31 @@
+2024/12/13 Dimitri
+1. Done since last scrum
+- 
+2. Plan until next Scrum
+- 
+3. Need assistance / figure things out
+- 
+
+2024/12/13 Alexandre
+1. Done since last scrum
+- 
+2. Plan until next Scrum
+-  
+3. Need assistance / figure things out
+- 
+
+2024/12/13 Michael
+1. Done since last scrum
+- started working on student dashboard
+2. Plan until next Scrum
+- fix db
+- work on key vault
+- Research tailwind css
+3. Need assistance / figure things out
+- 
+________________________________________________________________________________________
+
+
 2024/12/12 Dimitri
 1. Done since last scrum
 - 
