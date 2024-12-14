@@ -2,36 +2,31 @@ using Azure.Identity;
 using Microsoft.EntityFrameworkCore;
 using AppDev2Project.Models;
 using Microsoft.AspNetCore.Identity;
-using Azure.Extensions.AspNetCore.Configuration.Secrets; // Add this
-using Azure.Security.KeyVault.Secrets; // Add this
-using Microsoft.Extensions.Configuration.AzureKeyVault;
-using AzureKeyVaultConfigurationOptions = Azure.Extensions.AspNetCore.Configuration.Secrets.AzureKeyVaultConfigurationOptions; // Add this
+using Azure.Extensions.AspNetCore.Configuration.Secrets;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Azure Key Vault for securing private info
-builder.Configuration.AddAzureKeyVault(
-    new Uri("https://examina-keyvault2.vault.azure.net/"),
-    new DefaultAzureCredential(),
-    new AzureKeyVaultConfigurationOptions
-    {
-        ReloadInterval = TimeSpan.FromMinutes(5),
-        Manager = new KeyVaultSecretManager()
-    }
-);
+// Retrieve Key Vault URI from configuration
+string keyVaultUri = builder.Configuration["KeyVaultUri"];
+if (string.IsNullOrEmpty(keyVaultUri))
+{
+    throw new ArgumentNullException(nameof(keyVaultUri), "KeyVaultUri is not set in the configuration.");
+}
 
-// // Register DbContext with connection string stored in appsettings.json
-// builder.Services.AddDbContext<ExaminaDatabaseContext>(options =>
-//     options.UseSqlServer(builder.Configuration["DefaultConnection"]));
+// Add Azure Key Vault to the configuration
+builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri), new DefaultAzureCredential());
+
+// Add DbContext with the connection string from Key Vault
+builder.Services.AddDbContext<ExaminaDatabaseContext>(options =>
+    options.UseSqlServer(builder.Configuration["connection-string"]));
 
 // Add Identity
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddEntityFrameworkStores<ExaminaDatabaseContext>()
     .AddDefaultTokenProviders();
-    
-// Add services to the container.
+
 builder.Services.AddRazorPages();
-builder.Services.AddControllersWithViews(); 
+builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
@@ -50,29 +45,23 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Configure the HTTP request pipeline.
+// Configure the HTTP request pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
-
-app.UseStaticFiles(); // Serves static files (CSS, JS, etc.)
-
+app.UseStaticFiles();
 app.UseRouting();
-
-// teacher controller
-app.MapControllerRoute(
-    name: "teacher",
-    pattern: "{controller=Teacher}/{action=Index}/{id?}");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapStaticAssets();
-app.MapRazorPages();
+app.MapControllerRoute(
+    name: "teacher",
+    pattern: "{controller=Teacher}/{action=Index}/{id?}");
 
+app.MapRazorPages();
 app.Run();
