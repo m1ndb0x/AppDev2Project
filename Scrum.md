@@ -10,9 +10,9 @@
 
 2024/12/13 Alexandre
 1. Done since last scrum
-- 
+- register/login, more db config
 2. Plan until next Scrum
--  
+-  research blobs and fix db/ASPNET Identity issues
 3. Need assistance / figure things out
 - 
 
