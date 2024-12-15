@@ -2,8 +2,14 @@ using Azure.Identity;
 using Microsoft.EntityFrameworkCore;
 using AppDev2Project.Models;
 using Microsoft.AspNetCore.Identity;
+using Azure.Storage.Blobs;
+using AppDev2Project.Services;
+
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Register BlobStorageService as a singleton
+builder.Services.AddSingleton<BlobStorageService>();
 
 // Register DbContext with connection string stored in appsettings.json
 builder.Services.AddDbContext<ExaminaDatabaseContext>(options =>
@@ -20,6 +26,10 @@ builder.Services.AddControllersWithViews();
 
 // Add a service to store the database connection status
 builder.Services.AddSingleton<DatabaseConnectionStatus>();
+
+// Add Azure Blob service for accessing Blob storage
+builder.Services.AddSingleton(x => new BlobServiceClient(
+    builder.Configuration["BlobStorageConnectionString"]));
 
 var app = builder.Build();
 
