@@ -1,3 +1,30 @@
+2024/12/14 Dimitri
+1. Done since last scrum
+- fixed db connection and tables
+2. Plan until next Scrum
+- make it so that when logged in as teacher, directs you to teacher dashboard
+3. Need assistance / figure things out
+- 
+
+2024/12/14 Alexandre
+1. Done since last scrum
+- set up blob storage and connection
+2. Plan until next Scrum
+-  finish login/register
+3. Need assistance / figure things out
+- 
+
+2024/12/14 Michael
+1. Done since last scrum
+- finished basic student dashboard
+- setup azure blob storage
+2. Plan until next Scrum
+- Create all around settings page
+3. Need assistance / figure things out
+- 
+________________________________________________________________________________________
+
+
 2024/12/13 Dimitri
 1. Done since last scrum
 - teacher dash started
