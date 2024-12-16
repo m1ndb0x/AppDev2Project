@@ -6,53 +6,50 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - AppDev2Project</title>
-    <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/output.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/AppDev2Project.styles.css" asp-append-version="true" />
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 
-<body>
+<body style="background: linear-gradient(to right, #F88379, #FFB6C1);">
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-controller="Home" asp-action="Index">AppDev2Project</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
-                    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <!-- Check if user is authenticated -->
-                        @if (User.Identity.IsAuthenticated)
+        <nav class="bg-white shadow-lg py-2">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex items-center">
+                        <a asp-controller="Home" asp-action="Index" class="text-2xl font-bold text-teal-600">Examina</a>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
                         {
-                            <!-- If logged in, show Dashboard and Logout links -->
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Teacher" asp-action="Dashboard">Teacher
-                                    Dashboard</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Student" asp-action="StudentDashboard">Student
-                                    Dashboard</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Logout">Logout</a>
-                            </li>
+                            <a asp-controller="Teacher" asp-action="Dashboard" 
+                               class="px-3 py-2 rounded-md text-base font-medium text-teal-600 hover:text-teal-700 hover:bg-teal-50">
+                                Teacher Dashboard
+                            </a>
+                            <a asp-controller="Student" asp-action="StudentDashboard" 
+                               class="px-3 py-2 rounded-md text-base font-medium text-teal-600 hover:text-teal-700 hover:bg-teal-50">
+                                Student Dashboard
+                            </a>
+                            <a asp-controller="Account" asp-action="Logout" 
+                               class="px-3 py-2 rounded-md text-base font-medium text-red-600 hover:text-red-700 hover:bg-red-50">
+                                Logout
+                            </a>
                         }
                         else
                         {
-                            <!-- If not logged in, show Login and Register links -->
-                            <li class="nav-item">
-                                <a class="nav-link text-dark btn btn-primary mx-1" asp-controller="Account"
-                                    asp-action="Login">Login</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark btn btn-primary mx-1" asp-controller="Account"
-                                    asp-action="Register">Register</a>
-                            </li>
+                            <a asp-controller="Account" asp-action="Login" 
+                               class="px-3 py-2 rounded-md text-base font-medium text-teal-600 hover:text-teal-700 hover:bg-teal-50">
+                                Login
+                            </a>
+                            <a asp-controller="Account" asp-action="Register" 
+                               class="px-3 py-2 rounded-md text-base font-medium text-teal-600 hover:text-teal-700 hover:bg-teal-50">
+                                Register
+                            </a>
                         }
-                    </ul>
+                    </div>
                 </div>
             </div>
         </nav>
@@ -63,10 +60,9 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2024 - AppDev2Project -
-            <a asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <footer class="border-top footer text-muted bg-white">
+        <div class="container text-center py-3">
+            &copy; 2024 Examina - Your Online Examination Platform
         </div>
     </footer>
 

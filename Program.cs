@@ -4,7 +4,10 @@ using AppDev2Project.Models;
 using Microsoft.AspNetCore.Identity;
 using Azure.Storage.Blobs;
 using AppDev2Project.Services;
-
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +34,15 @@ builder.Services.AddSingleton<DatabaseConnectionStatus>();
 builder.Services.AddSingleton(x => new BlobServiceClient(
     builder.Configuration["BlobStorageConnectionString"]));
 
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+    });
+
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
 
 // Test database connection
@@ -54,7 +66,7 @@ using (var scope = app.Services.CreateScope())
 // Configure the HTTP request pipeline
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error");
+    app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
 
@@ -71,8 +83,6 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-
 app.MapRazorPages();
 
-app.MapRazorPages();
 app.Run();
