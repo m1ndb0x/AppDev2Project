@@ -33,6 +33,13 @@ namespace AppDev2Project.Services
             var blobClient = containerClient.GetBlobClient(fileName);
             await blobClient.DownloadToAsync(destinationStream); // Download the file
         }
+          // Method to get the public URL of a blob
+        public string GetBlobUrl(string containerName, string fileName)
+        {
+            var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+            var blobClient = containerClient.GetBlobClient(fileName);
+            return blobClient.Uri.AbsoluteUri;
+        }
     }
 }
 
@@ -63,7 +70,7 @@ public class FileController : Controller
             using (var fileStream = file.OpenReadStream())
             {
                 // Upload the file to Blob Storage
-                await _blobStorageService.UploadFileAsync("your-container-name", file.FileName, fileStream);
+                await _blobStorageService.UploadFileAsync("examina", file.FileName, fileStream);
             }
             return Ok("File uploaded successfully!");
         }
@@ -77,7 +84,7 @@ public class FileController : Controller
         var memoryStream = new MemoryStream();
         
         // Download the file from Blob Storage
-        await _blobStorageService.DownloadFileAsync("your-container-name", fileName, memoryStream);
+        await _blobStorageService.DownloadFileAsync("examina", fileName, memoryStream);
         
         // Return the file as a response
         memoryStream.Position = 0;

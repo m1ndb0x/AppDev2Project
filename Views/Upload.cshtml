@@ -1,0 +1,11 @@
+@model IFormFile
+
+<h2>Upload Profile Picture</h2>
+
+<form asp-action="Upload" method="post" enctype="multipart/form-data">
+    <div>
+        <label for="file">Select Profile Picture:</label>
+        <input type="file" id="file" name="file" />
+    </div>
+    <button type="submit">Upload</button>
+</form>
