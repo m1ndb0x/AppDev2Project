@@ -25,7 +25,10 @@ public partial class User : IdentityUser<int> // Derive from IdentityUser<int>
 
     public virtual ICollection<CompletedExam> CompletedExams { get; set; } = new List<CompletedExam>();
 
-    public virtual ICollection<QuestionAttempt > QuestionAttempt  { get; set; } = new List<QuestionAttempt >();
+    public virtual ICollection<QuestionAttempt> QuestionAttempt { get; set; } = new List<QuestionAttempt>();
 
     public virtual ICollection<Exam> Exams { get; set; } = new List<Exam>();
+
+    public string ProfilePictureUrl { get; set; } = string.Empty;
+
 }
