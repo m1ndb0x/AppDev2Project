@@ -1,7 +1,7 @@
 @model AppDev2Project.Models.RegisterViewModel
 
 <h2>Register</h2>
-<form asp-action="Register" method="post">
+<form asp-controller="Account" asp-action="Register" method="post">
     <div>
         <label asp-for="Name"></label>
         <input asp-for="Name" />

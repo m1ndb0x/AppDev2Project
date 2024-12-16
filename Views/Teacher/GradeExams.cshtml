@@ -1,0 +1,40 @@
+@model List<AppDev2Project.Models.QuestionAttempt>
+
+@{
+    ViewData["Title"] = "Grade Exams";
+}
+
+<h2 class="text-2xl font-bold mb-4">Grade Exams</h2>
+
+<table class="min-w-full bg-white border border-gray-200">
+    <thead>
+        <tr>
+            <th class="py-2 px-4 border-b">Question</th>
+            <th class="py-2 px-4 border-b">Student</th>
+            <th class="py-2 px-4 border-b">Answer</th>
+            <th class="py-2 px-4 border-b">Grade</th>
+            <th class="py-2 px-4 border-b">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var questionAttempt in Model)
+        {
+            <tr>
+                <td class="py-2 px-4 border-b">@questionAttempt.Question.QuestionText</td>
+                <td class="py-2 px-4 border-b">@questionAttempt.User.Name</td>
+                <td class="py-2 px-4 border-b">@questionAttempt.AnswerText</td>
+                <td class="py-2 px-4 border-b">@questionAttempt.Grade?.ToString("F2") ?? "Not Graded"</td>
+                <td class="py-2 px-4 border-b">
+                    @if (!questionAttempt.IsGraded)
+                    {
+                        <a href="/Teacher/GradeQuestion?id=@questionAttempt.Id" class="text-blue-500 hover:underline">Grade</a>
+                    }
+                    else
+                    {
+                        <span class="text-gray-500">Graded</span>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

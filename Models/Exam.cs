@@ -23,7 +23,7 @@ public partial class Exam
 
     public virtual ICollection<CompletedExam> CompletedExams { get; set; } = new List<CompletedExam>();
 
-    public virtual ICollection<ExamAttempt> ExamAttempts { get; set; } = new List<ExamAttempt>();
+    public virtual ICollection<QuestionAttempt > QuestionAttempt  { get; set; } = new List<QuestionAttempt >();
 
     public virtual ICollection<Question> Questions { get; set; } = new List<Question>();
 

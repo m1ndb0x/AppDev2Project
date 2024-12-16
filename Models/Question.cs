@@ -29,5 +29,5 @@ public partial class Question
 
     public virtual Exam Exam { get; set; } = null!;
 
-    public virtual ICollection<ExamAttempt> ExamAttempts { get; set; } = new List<ExamAttempt>(); 
+    public virtual ICollection<QuestionAttempt> QuestionAttempt  { get; set; } = new List<QuestionAttempt>(); 
 }

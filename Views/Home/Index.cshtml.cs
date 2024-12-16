@@ -1,6 +1,5 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using AppDev2Project.Models;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace AppDev2Project.Pages;
 

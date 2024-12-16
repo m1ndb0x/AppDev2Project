@@ -13,7 +13,7 @@ namespace AppDev2Project.Models
 
         public DbSet<Exam> Exams { get; set; } = null!;
         public DbSet<Question> Questions { get; set; } = null!;
-        public DbSet<ExamAttempt> ExamAttempts { get; set; } = null!;
+        public DbSet<QuestionAttempt > QuestionAttempt  { get; set; } = null!;
         public DbSet<CompletedExam> CompletedExams { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -63,7 +63,7 @@ namespace AppDev2Project.Models
                       .OnDelete(DeleteBehavior.Restrict);
             });
 
-            modelBuilder.Entity<ExamAttempt>(entity =>
+            modelBuilder.Entity<QuestionAttempt>(entity =>
             {
                 entity.ToTable("exam_attempt");
                 entity.HasKey(e => e.Id);
@@ -72,11 +72,11 @@ namespace AppDev2Project.Models
                 entity.Property(e => e.Grade);
                 entity.Property(e => e.SubmittedAt).HasDefaultValueSql("GETDATE()");
                 entity.HasOne(e => e.Question)
-                      .WithMany(q => q.ExamAttempts)
+                      .WithMany(q => q.QuestionAttempt)
                       .HasForeignKey(e => e.QuestionId)
                       .OnDelete(DeleteBehavior.Restrict);
                 entity.HasOne(e => e.User)
-                      .WithMany(u => u.ExamAttempts)
+                      .WithMany(u => u.QuestionAttempt)
                       .HasForeignKey(e => e.UserId)
                       .OnDelete(DeleteBehavior.Restrict);
             });

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace AppDev2Project.Models;
 
-public partial class ExamAttempt
+public partial class QuestionAttempt
 {
     public int Id { get; set; }
 

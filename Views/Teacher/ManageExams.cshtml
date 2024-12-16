@@ -1,5 +1,4 @@
-@page
-@model AppDev2Project.Pages.Teacher.ManageExamsModel
+@model List<AppDev2Project.Models.Exam> 
 @{
     ViewData["Title"] = "Manage Exams";
 }
@@ -16,7 +15,7 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var exam in Model.Exams)
+        @foreach (var exam in Model)
         {
             <tr>
                 <td class="py-2 px-4 border-b">@exam.Title</td>

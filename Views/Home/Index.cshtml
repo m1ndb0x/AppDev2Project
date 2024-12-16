@@ -1,17 +1,16 @@
-﻿@page
-@model IndexModel
+﻿@model IndexModel
+
 @{
     ViewData["Title"] = "Home page";
 }
-
 <div class="text-center"> 
     <h1 class="display-4 transition-transform duration-500 ease-in-out transform hover:scale-110">Welcome</h1>
     <p class="transition-opacity duration-500 ease-in-out opacity-100 hover:opacity-75">Learn about <a href="https://learn.microsoft.com/aspnet/core" class="text-blue-500 hover:text-blue-700">building Web apps with ASP.NET Core</a>.</p>
     <p class="transition-opacity duration-500 ease-in-out opacity-100 hover:opacity-75">Visit <a href="/Teacher" class="text-blue-500 hover:text-blue-700">my teacher's page</a>.</p>
-    <p class="mt-4">
+    @* <p class="mt-4">
         Database connection status: 
         <span class="@(Model.IsDbConnected ? "text-green-500" : "text-red-500")">
             @(Model.IsDbConnected ? "Connected" : "Not Connected")
         </span>
-    </p>
-</div>
+    </p> *@
+</div> 
