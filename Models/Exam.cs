@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace AppDev2Project.Models;
 
@@ -7,25 +8,29 @@ public partial class Exam
 {
     public int Id { get; set; }
 
+    [Required]
+    [StringLength(255)]
     public string Title { get; set; } = null!;
 
     public string? Description { get; set; }
 
-    public string? Subject { get; set; }
+    [Required]
+    [StringLength(255)]
+    public string Subject { get; set; } = null!;
+
+    [Required]
+    [Range(0, 100)]
+    public double TotalScoreWeight { get; set; }
+
+    [Required]
+    public string State { get; set; } = "Incomplete";
 
     public int TeacherId { get; set; }
 
-    public string State { get; set; } = null!; // Ensure state is either 'draft', 'available', or 'closed'
-
-    public double TotalScoreWeight { get; set; }
-
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-    public virtual ICollection<CompletedExam> CompletedExams { get; set; } = new List<CompletedExam>();
-
-    public virtual ICollection<QuestionAttempt > QuestionAttempt  { get; set; } = new List<QuestionAttempt >();
-
-    public virtual ICollection<Question> Questions { get; set; } = new List<Question>();
-
     public virtual User Teacher { get; set; } = null!;
+    public virtual ICollection<Question> Questions { get; set; } = new List<Question>();
+    public virtual ICollection<CompletedExam> CompletedExams { get; set; } = new List<CompletedExam>();
+    public virtual ICollection<QuestionAttempt> QuestionAttempt { get; set; } = new List<QuestionAttempt>();
 }

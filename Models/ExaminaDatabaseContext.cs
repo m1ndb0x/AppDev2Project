@@ -60,7 +60,7 @@ namespace AppDev2Project.Models
                 entity.HasOne(e => e.Exam)
                       .WithMany(ex => ex.Questions)
                       .HasForeignKey(e => e.ExamId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.Cascade); // Changed from Restrict to Cascade
             });
 
             modelBuilder.Entity<QuestionAttempt>(entity =>
@@ -74,7 +74,7 @@ namespace AppDev2Project.Models
                 entity.HasOne(e => e.Question)
                       .WithMany(q => q.QuestionAttempt)
                       .HasForeignKey(e => e.QuestionId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.Cascade); // Changed from Restrict to Cascade
                 entity.HasOne(e => e.User)
                       .WithMany(u => u.QuestionAttempt)
                       .HasForeignKey(e => e.UserId)
@@ -91,7 +91,7 @@ namespace AppDev2Project.Models
                 entity.HasOne(e => e.Exam)
                       .WithMany(ex => ex.CompletedExams)
                       .HasForeignKey(e => e.ExamId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.Cascade); // Changed from Restrict to Cascade
                 entity.HasOne(e => e.User)
                       .WithMany(u => u.CompletedExams)
                       .HasForeignKey(e => e.UserId)

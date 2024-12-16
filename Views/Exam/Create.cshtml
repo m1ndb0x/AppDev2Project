@@ -1,0 +1,58 @@
+@model AppDev2Project.Models.Exam
+@{
+    ViewData["Title"] = "Create Exam";
+}
+
+<div class="container mx-auto p-6">
+    <h2 class="text-2xl font-bold mb-6">Create New Exam</h2>
+
+    <form method="post" asp-controller="Exam" asp-action="Create">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="All" class="text-red-500 mb-4"></div>
+        
+        <div class="mb-4">
+            <label asp-for="Title" class="block text-gray-700 text-sm font-bold mb-2">Title</label>
+            <input asp-for="Title" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required />
+            <span asp-validation-for="Title" class="text-red-500 text-xs italic"></span>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="Description" class="block text-gray-700 text-sm font-bold mb-2">Description</label>
+            <textarea asp-for="Description" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" rows="4"></textarea>
+            <span asp-validation-for="Description" class="text-red-500 text-xs italic"></span>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="Subject" class="block text-gray-700 text-sm font-bold mb-2">Subject</label>
+            <input asp-for="Subject" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required />
+            <span asp-validation-for="Subject" class="text-red-500 text-xs italic"></span>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="TotalScoreWeight" class="block text-gray-700 text-sm font-bold mb-2">Total Score</label>
+            <input asp-for="TotalScoreWeight" type="number" value="100" min="0" max="100" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required />
+            <span asp-validation-for="TotalScoreWeight" class="text-red-500 text-xs italic"></span>
+        </div>
+
+        <div class="flex items-center justify-between">
+            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                Create Exam
+            </button>
+            <a asp-action="Index" class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function() {
+            $('form').on('submit', function() {
+                console.log('Form submitted');
+                return true;
+            });
+        });
+    </script>
+}

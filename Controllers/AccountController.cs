@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using AppDev2Project.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication;
+using System.Security.Claims;
 
 namespace AppDev2Project.Controllers
 {
@@ -37,7 +39,7 @@ namespace AppDev2Project.Controllers
                     UserName = model.Email,
                     Email = model.Email,
                     Name = model.Name,
-                    Role = "Student" //Default Role 
+                    Role = model.Role // Assuming you added Role to RegisterViewModel
                 };
 
                 var result = await _userManager.CreateAsync(user, model.Password);
@@ -46,9 +48,15 @@ namespace AppDev2Project.Controllers
                 {
                     _logger.LogInformation($"User {model.Email} registered successfully.");
 
+                    // Add role claim
+                    await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.Role, user.Role));
+                
+                    // Add user ID claim
+                    await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
+
                     // Sign in the user
                     await _signInManager.SignInAsync(user, isPersistent: false);
-                    return RedirectToAction("StudentDashboard", "Student");
+                    return RedirectToAction("Index", "Home");
                 }
 
                 foreach (var error in result.Errors)
@@ -74,35 +82,40 @@ namespace AppDev2Project.Controllers
         {
             if (ModelState.IsValid)
             {
-                var result = await _signInManager.PasswordSignInAsync(
-                    model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
-
-                if (result.Succeeded)
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user != null)
                 {
-                    var user = await _userManager.FindByEmailAsync(model.Email);
+                    var result = await _signInManager.PasswordSignInAsync(user, model.Password, model.RememberMe, false);
+                    if (result.Succeeded)
+                    {
+                        // Create claims principal with additional claims
+                        var claims = new List<Claim>
+                        {
+                            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                            new Claim(ClaimTypes.Role, user.Role)
+                        };
 
-                    _logger.LogInformation($"User {model.Email} logged in successfully.");
+                        await _signInManager.SignInWithClaimsAsync(user, model.RememberMe, claims);
 
-                    if (user.Role == "Teacher")
-                    {
-                        // Razor Page path for Teacher Dashboard
-                        return RedirectToAction("Dashboard", "Teacher");
-                    }
-                    else if (user.Role == "Student")
-                    {
-                        // Razor Page path for Student Dashboard
-                        return RedirectToAction("StudentDashboard", "Student");
-                    }
-                    else
-                    {
-                        return RedirectToAction("Index", "Home");
+                        _logger.LogInformation($"User {model.Email} logged in successfully.");
+                        if (user.Role == "Teacher")
+                        {
+                            // Razor Page path for Teacher Dashboard
+                            return RedirectToAction("Dashboard", "Teacher");
+                        }
+                        else if (user.Role == "Student")
+                        {
+                            // Razor Page path for Student Dashboard
+                            return RedirectToAction("StudentDashboard", "Student");
+                        }
+                        else
+                        {
+                            return RedirectToAction("Index", "Home");
+                        }
                     }
                 }
-
-                _logger.LogWarning($"Failed login attempt for {model.Email}.");
-                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
             }
-
+            ModelState.AddModelError(string.Empty, "Invalid login attempt.");
             return View("~/Views/Account/Login.cshtml");
         }
 
@@ -111,6 +124,11 @@ namespace AppDev2Project.Controllers
             await _signInManager.SignOutAsync();
             _logger.LogInformation("User logged out.");
             return RedirectToAction("Login", "Account");
+        }
+
+        public IActionResult AccessDenied()
+        {
+            return View();
         }
     }
 }
