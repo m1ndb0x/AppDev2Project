@@ -132,11 +132,12 @@ namespace AppDev2Project.Controllers
                 _context.Exams.Add(exam);
                 await _context.SaveChangesAsync();
 
+                TempData["Success"] = "Exam created successfully!";
                 return RedirectToAction(nameof(Edit), new { id = exam.Id });
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", $"Error creating exam: {ex.Message}");
+                TempData["Error"] = $"Error creating exam: {ex.Message}";
                 return View(exam);
             }
         }
@@ -151,6 +152,7 @@ namespace AppDev2Project.Controllers
 
             if (exam == null)
             {
+                TempData["Error"] = "Exam not found.";
                 return NotFound();
             }
 
@@ -158,6 +160,7 @@ namespace AppDev2Project.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (exam.TeacherId != int.Parse(userId))
             {
+                TempData["Error"] = "You are not authorized to edit this exam.";
                 return Forbid();
             }
 
@@ -185,12 +188,14 @@ namespace AppDev2Project.Controllers
                     // Attach and mark entity as modified
                     _context.Entry(exam).State = EntityState.Modified;
                     await _context.SaveChangesAsync();
+                    TempData["Success"] = "Exam updated successfully!";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
                     if (!ExamExists(exam.Id))
                     {
+                        TempData["Error"] = "Exam no longer exists.";
                         return NotFound();
                     }
                     else
@@ -200,6 +205,7 @@ namespace AppDev2Project.Controllers
                 }
             }
 
+            TempData["Error"] = "Please correct the errors in the form.";
             // If we got this far, something failed, redisplay form
             var reloadedExam = await _context.Exams
                 .Include(e => e.Questions)
@@ -223,6 +229,7 @@ namespace AppDev2Project.Controllers
 
             if (exam == null)
             {
+                TempData["Error"] = "Exam not found.";
                 return NotFound();
             }
 
@@ -230,6 +237,7 @@ namespace AppDev2Project.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (exam.TeacherId != int.Parse(userId))
             {
+                TempData["Error"] = "You are not authorized to delete this exam.";
                 return Forbid();
             }
 
@@ -256,6 +264,7 @@ namespace AppDev2Project.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (exam.TeacherId != int.Parse(userId))
             {
+                TempData["Error"] = "You are not authorized to delete this exam.";
                 return Forbid();
             }
 
@@ -263,12 +272,12 @@ namespace AppDev2Project.Controllers
             {
                 _context.Exams.Remove(exam);
                 await _context.SaveChangesAsync();
+                TempData["Success"] = "Exam deleted successfully!";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception)
             {
-                // Log the error
-                ModelState.AddModelError("", "Unable to delete exam. Please try again.");
+                TempData["Error"] = "Unable to delete exam. Please try again.";
                 return View(exam);
             }
         }
@@ -286,19 +295,22 @@ namespace AppDev2Project.Controllers
 
             if (exam == null)
             {
+                TempData["Error"] = "Exam not found.";
                 return NotFound();
             }
 
             // Check if student is assigned to this exam
             if (!exam.AssignedStudents.Any(s => s.Id == userId))
             {
-                return Forbid("You are not assigned to this exam.");
+                TempData["Error"] = "You are not assigned to this exam.";
+                return RedirectToAction("Dashboard", "Student");
             }
 
             // Check if exam is available
             if (exam.AvailableFrom > DateTime.Now || 
                 (exam.AvailableUntil.HasValue && exam.AvailableUntil < DateTime.Now))
             {
+                TempData["Error"] = "This exam is not available at this time.";
                 return BadRequest("This exam is not available at this time.");
             }
 
@@ -341,47 +353,56 @@ namespace AppDev2Project.Controllers
                 return BadRequest("You have already submitted this exam.");
             }
 
-            // Create completed exam record
-            var completedExam = new CompletedExam
+            try 
             {
-                ExamId = examId,
-                UserId = userId,
-                CompletedAt = DateTime.Now,
-                GradedAt = DateTime.Now,
-                TotalScore = 0.0 // Will be updated after processing questions
-            };
-
-            _context.CompletedExams.Add(completedExam);
-
-            // Calculate total score
-            double totalScore = 0;
-            foreach (var question in exam.Questions)
-            {
-                if (questions.TryGetValue(question.Id, out var answer))
+                // Create completed exam record
+                var completedExam = new CompletedExam
                 {
-                    var attempt = new QuestionAttempt
+                    ExamId = examId,
+                    UserId = userId,
+                    CompletedAt = DateTime.Now,
+                    GradedAt = DateTime.Now,
+                    TotalScore = 0.0 // Will be updated after processing questions
+                };
+
+                _context.CompletedExams.Add(completedExam);
+
+                // Calculate total score
+                double totalScore = 0;
+                foreach (var question in exam.Questions)
+                {
+                    if (questions.TryGetValue(question.Id, out var answer))
                     {
-                        QuestionId = question.Id,
-                        UserId = userId,
-                        AnswerText = answer.Answer,
-                        IsGraded = true,
-                        Grade = answer.Answer == question.CorrectAnswer ? question.ScoreWeight : 0,
-                        SubmittedAt = DateTime.Now
-                    };
-                    _context.QuestionAttempt.Add(attempt);
-                    
-                    // Add score calculation here
-                    if (answer.Answer == question.CorrectAnswer)
-                    {
-                        totalScore += question.ScoreWeight;
+                        var attempt = new QuestionAttempt
+                        {
+                            QuestionId = question.Id,
+                            UserId = userId,
+                            AnswerText = answer.Answer,
+                            IsGraded = true,
+                            Grade = answer.Answer == question.CorrectAnswer ? question.ScoreWeight : 0,
+                            SubmittedAt = DateTime.Now
+                        };
+                        _context.QuestionAttempt.Add(attempt);
+                        
+                        // Add score calculation here
+                        if (answer.Answer == question.CorrectAnswer)
+                        {
+                            totalScore += question.ScoreWeight;
+                        }
                     }
                 }
+
+                completedExam.TotalScore = totalScore;
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = "Exam submitted successfully!";
+                return RedirectToAction("ViewResult", new { id = examId });
             }
-
-            completedExam.TotalScore = totalScore;
-            await _context.SaveChangesAsync();
-
-            return RedirectToAction("ViewResult", new { id = examId });
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Failed to submit exam. Please try again.";
+                return RedirectToAction("TakeExam", new { id = examId });
+            }
         }
 
         // View Exam Result
@@ -397,9 +418,11 @@ namespace AppDev2Project.Controllers
 
             if (completedExam == null)
             {
+                TempData["Error"] = "Exam result not found.";
                 return NotFound();
             }
 
+            TempData["Success"] = "Here are your exam results.";
             return View(completedExam);
         }
     }
