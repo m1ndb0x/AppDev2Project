@@ -1,0 +1,105 @@
+@model AppDev2Project.Models.Exam
+@{
+    ViewData["Title"] = "Edit Exam";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-white shadow-md rounded-lg overflow-hidden p-6">
+        <h2 class="text-2xl font-bold mb-6">Edit Exam</h2>
+
+        <form asp-action="Edit" method="post">
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="TeacherId" />
+            <input type="hidden" asp-for="CreatedAt" />
+
+            <div class="mb-4">
+                <label asp-for="Title" class="block text-gray-700 font-bold mb-2">Title</label>
+                <input asp-for="Title" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <span asp-validation-for="Title" class="text-red-500 text-sm"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Subject" class="block text-gray-700 font-bold mb-2">Subject</label>
+                <input asp-for="Subject" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <span asp-validation-for="Subject" class="text-red-500 text-sm"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Description" class="block text-gray-700 font-bold mb-2">Description</label>
+                <textarea asp-for="Description" rows="4" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                <span asp-validation-for="Description" class="text-red-500 text-sm"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="TotalScoreWeight" class="block text-gray-700 font-bold mb-2">Total Score Weight</label>
+                <input asp-for="TotalScoreWeight" type="number" step="0.1" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <span asp-validation-for="TotalScoreWeight" class="text-red-500 text-sm"></span>
+            </div>
+
+            <div class="mb-6">
+                <label asp-for="State" class="block text-gray-700 font-bold mb-2">State</label>
+                <select asp-for="State" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="Incomplete">Incomplete</option>
+                    <option value="Complete">Complete</option>
+                </select>
+                <span asp-validation-for="State" class="text-red-500 text-sm"></span>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    Save Changes
+                </button>
+                <a href="@Url.Action("Index")" class="text-gray-600 hover:text-gray-800">Cancel</a>
+            </div>
+        </form>
+
+        @if (Model.Questions != null && Model.Questions.Any())
+        {
+            <div class="mt-8">
+                <h3 class="text-xl font-bold mb-4">Questions</h3>
+                <div class="space-y-4">
+                    @foreach (var question in Model.Questions.OrderBy(q => q.Order))
+                    {
+                        <div class="border rounded-lg p-4">
+                            <p class="font-semibold">@question.QuestionText</p>
+                            <p class="text-sm text-gray-600">Type: @question.QuestionType</p>
+                            <p class="text-sm text-gray-600">Score: @question.ScoreWeight</p>
+                            <div class="mt-2">
+                                <a href="@Url.Action("Edit", "Question", new { id = question.Id })" 
+                                   class="text-blue-500 hover:text-blue-700 mr-4">Edit</a>
+                                <a href="@Url.Action("Delete", "Question", new { id = question.Id })" 
+                                   class="text-red-500 hover:text-red-700">Delete</a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="mt-8 text-center">
+                <h3 class="text-xl font-bold mb-4">No Questions Added Yet</h3>
+                <p class="text-gray-600 mb-4">Start adding questions to build your exam.</p>
+                <a href="@Url.Action("Create", "Question", new { examId = Model.Id })" 
+                   class="bg-green-500 text-black px-6 py-3 rounded-md hover:bg-green-600 inline-block">
+                    Add Your First Question
+                </a>
+            </div>
+        }
+
+        @if (Model.Questions != null && Model.Questions.Any())
+        {
+            <div class="mt-6">
+                <a href="@Url.Action("Create", "Question", new { examId = Model.Id })" 
+                   class="bg-green-500 text-black px-4 py-2 rounded-md hover:bg-green-600 inline-block">
+                    Add New Question
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

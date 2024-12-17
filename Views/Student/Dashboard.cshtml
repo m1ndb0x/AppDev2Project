@@ -1,0 +1,149 @@
+@model AppDev2Project.Models.ViewModels.StudentDashboardViewModelV2
+@{
+    ViewData["Title"] = "Student Dashboard";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container mx-auto px-4 py-8">
+    <!-- Remove duplicate welcome section -->
+    <div class="flex items-center mb-6">
+        <div class="w-16 h-16 rounded-full overflow-hidden">
+            <img src="@Model.ProfilePictureUrl" alt="@Model.Name" class="w-full h-full object-cover" />
+        </div>
+        <h1 class="text-2xl font-bold ml-4">Welcome, @Model.Name</h1>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Available Exams -->
+        @* <div class="bg-white shadow-md rounded-lg p-6">
+            <h2 class="text-xl font-bold mb-4">Available Exams</h2>
+            @if (Model.Exams.Any())
+            {
+                <div class="space-y-4">
+                    @foreach (var exam in Model.Exams)
+                    {
+                        var isAvailable = exam.AvailableFrom <= DateTime.Now && 
+                                         (!exam.AvailableUntil.HasValue || exam.AvailableUntil > DateTime.Now);
+                        
+                        <div class="border rounded-lg p-4 hover:bg-gray-50">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="font-semibold">@exam.Title</h3>
+                                    <p class="text-sm text-gray-600">@exam.Subject</p>
+                                    <p class="text-sm text-gray-500">Questions: @exam.Questions.Count()</p>
+                                    <p class="text-sm text-gray-500">
+                                        Available: @exam.AvailableFrom.ToString("MMM dd, yyyy HH:mm") 
+                                        @if (exam.AvailableUntil.HasValue)
+                                        {
+                                            <span>- @exam.AvailableUntil.Value.ToString("MMM dd, yyyy HH:mm")</span>
+                                        }
+                                    </p>
+                                    <p class="text-sm @(isAvailable ? "text-green-600" : "text-red-600")">
+                                        Status: @(isAvailable ? "Available" : "Not Available")
+                                    </p>
+                                </div>
+                                @if (isAvailable)
+                                {
+                                    <a href="@Url.Action("TakeExam", "Exam", new { id = exam.Id })" 
+                                       class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
+                                        Start Exam
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="bg-gray-300 text-gray-600 px-4 py-2 rounded-md cursor-not-allowed">
+                                        Not Available
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="text-gray-500 text-center py-4">No exams available at the moment.</p>
+            }
+        </div> *@
+
+        <!-- Assigned Exams -->
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h2 class="text-xl font-bold mb-4">Assigned Exams</h2>
+            @if (Model.Exams.Any())
+            {
+                <div class="space-y-4">
+                    @foreach (var exam in Model.Exams)
+                    {
+                        var isAvailable = exam.AvailableFrom <= DateTime.Now && 
+                                        (!exam.AvailableUntil.HasValue || exam.AvailableUntil > DateTime.Now);
+                        
+                        <div class="border rounded-lg p-4 hover:bg-gray-50">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="font-semibold">@exam.Title</h3>
+                                    <p class="text-sm text-gray-600">@exam.Subject</p>
+                                    <p class="text-sm text-gray-500">Questions: @exam.Questions.Count()</p>
+                                    <p class="text-sm text-gray-500">Duration: @exam.Duration minutes</p>
+                                    <p class="text-sm text-gray-500">
+                                        Available: @exam.AvailableFrom.ToString("MMM dd, yyyy HH:mm") 
+                                        @if (exam.AvailableUntil.HasValue)
+                                        {
+                                            <span>- @exam.AvailableUntil.Value.ToString("MMM dd, yyyy HH:mm")</span>
+                                        }
+                                    </p>
+                                    <p class="text-sm @(isAvailable ? "text-green-600" : "text-red-600")">
+                                        Status: @(isAvailable ? "Available Now" : "Not Available")
+                                    </p>
+                                </div>
+                                @if (isAvailable)
+                                {
+                                    <a href="@Url.Action("TakeExam", "Exam", new { id = exam.Id })" 
+                                       class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
+                                        Start Exam
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="text-gray-500 text-center py-4">No exams are currently assigned to you.</p>
+            }
+        </div>
+
+        <!-- Completed Exams -->
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h2 class="text-xl font-bold mb-4">Completed Exams</h2>
+            @if (Model.CompletedExams.Any())
+            {
+                <div class="space-y-4">
+                    @foreach (var completedExam in Model.CompletedExams)
+                    {
+                        <div class="border rounded-lg p-4">
+                            <h3 class="font-semibold">@completedExam.Exam.Title</h3>
+                            <p class="text-sm text-gray-600">@completedExam.Exam.Subject</p>
+                            <div class="mt-2 flex justify-between items-center">
+                                <div>
+                                    <span class="text-sm font-medium">Score: </span>
+                                    <span class="text-sm @(completedExam.TotalScore >= 60 ? "text-green-600" : "text-red-600")">
+                                        @completedExam.TotalScore%
+                                    </span>
+                                </div>
+                                <a href="@Url.Action("ViewResult", "Exam", new { id = completedExam.ExamId })" 
+                                   class="text-blue-500 hover:text-blue-700">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="text-gray-500 text-center py-4">You haven't completed any exams yet.</p>
+            }
+        </div>
+    </div>
+</div>

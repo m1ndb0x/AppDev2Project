@@ -13,8 +13,9 @@ namespace AppDev2Project.Models
 
         public DbSet<Exam> Exams { get; set; } = null!;
         public DbSet<Question> Questions { get; set; } = null!;
-        public DbSet<QuestionAttempt > QuestionAttempt  { get; set; } = null!;
+        public DbSet<QuestionAttempt> QuestionAttempt { get; set; } = null!;
         public DbSet<CompletedExam> CompletedExams { get; set; } = null!;
+        // Remove ExamStudents DbSet
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -42,10 +43,16 @@ namespace AppDev2Project.Models
                 entity.Property(e => e.State).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.TotalScoreWeight).IsRequired();
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()");
+                entity.Property(e => e.AvailableFrom).IsRequired();
+                entity.Property(e => e.AvailableUntil);
                 entity.HasOne(e => e.Teacher)
-                      .WithMany(u => u.Exams)
+                      .WithMany(u => u.CreatedExams)
                       .HasForeignKey(e => e.TeacherId)
                       .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasMany(e => e.AssignedStudents)
+                    .WithMany(u => u.AssignedExams)
+                    .UsingEntity(j => j.ToTable("exam_student_assignments"));
             });
 
             modelBuilder.Entity<Question>(entity =>
@@ -60,7 +67,7 @@ namespace AppDev2Project.Models
                 entity.HasOne(e => e.Exam)
                       .WithMany(ex => ex.Questions)
                       .HasForeignKey(e => e.ExamId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.Cascade); // Changed from Restrict to Cascade
             });
 
             modelBuilder.Entity<QuestionAttempt>(entity =>
@@ -74,7 +81,7 @@ namespace AppDev2Project.Models
                 entity.HasOne(e => e.Question)
                       .WithMany(q => q.QuestionAttempt)
                       .HasForeignKey(e => e.QuestionId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.Cascade); // Changed from Restrict to Cascade
                 entity.HasOne(e => e.User)
                       .WithMany(u => u.QuestionAttempt)
                       .HasForeignKey(e => e.UserId)
@@ -87,11 +94,12 @@ namespace AppDev2Project.Models
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.IsCompleted).HasDefaultValue(false);
                 entity.Property(e => e.TotalScore);
-                entity.Property(e => e.GradedAt);
+                entity.Property(e => e.CompletedAt).HasColumnType("datetime2").IsRequired();
+                entity.Property(e => e.GradedAt).HasColumnType("datetime2");
                 entity.HasOne(e => e.Exam)
                       .WithMany(ex => ex.CompletedExams)
                       .HasForeignKey(e => e.ExamId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.Cascade);
                 entity.HasOne(e => e.User)
                       .WithMany(u => u.CompletedExams)
                       .HasForeignKey(e => e.UserId)

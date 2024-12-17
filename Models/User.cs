@@ -15,15 +15,39 @@ namespace AppDev2Project.Models;
 
 public partial class User : IdentityUser<int> // Derive from IdentityUser<int>
 {
-    public string Name { get; set; } = null!;
+    [PersonalData]
+    public string Name { get; set; } = null!;  // This is the display name that can contain spaces
 
-    public string Role { get; set; } = null!; // Ensure role is either 'student' or 'teacher'
+    // [Required]
+    // [StringLength(50)]
+    public string Role { get; set; } = "Student"; // Default role
 
     public DateTime? CreatedAt { get; set; } = DateTime.Now;
 
     public virtual ICollection<CompletedExam> CompletedExams { get; set; } = new List<CompletedExam>();
 
-    public virtual ICollection<QuestionAttempt > QuestionAttempt  { get; set; } = new List<QuestionAttempt >();
+    public virtual ICollection<QuestionAttempt> QuestionAttempt { get; set; } = new List<QuestionAttempt>();
 
-    public virtual ICollection<Exam> Exams { get; set; } = new List<Exam>();
+    public virtual ICollection<Exam> CreatedExams { get; set; } = new List<Exam>();  // Exams created as teacher
+    public virtual ICollection<Exam> AssignedExams { get; set; } = new List<Exam>(); // Exams assigned as student
+
+    public string ProfilePictureUrl { get; set; } = string.Empty;
+
+    // Property to get user's initials
+    public string Initials
+    {
+        get
+        {
+            if (!string.IsNullOrEmpty(Name))
+            {
+                var initials = string.Join("", Name.Split(' ')
+                                    .Where(w => !string.IsNullOrEmpty(w))
+                                    .Select(w => w[0]))
+                                    .ToUpper();
+                return initials.Length > 2 ? initials.Substring(0, 2) : initials;
+            }
+            return "NA"; // Default fallback if Name is empty
+        }
+    }
+
 }

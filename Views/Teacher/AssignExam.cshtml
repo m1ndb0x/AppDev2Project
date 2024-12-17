@@ -1,0 +1,50 @@
+@model IEnumerable<AppDev2Project.Models.Exam>
+@{
+    ViewData["Title"] = "Assign Exam";
+    Layout = "_DashboardLayout";
+    var student = ViewBag.Student as AppDev2Project.Models.User;
+}
+
+<div class="container mx-auto px-6 py-8">
+    <div class="mb-6">
+        <h1 class="text-2xl font-semibold text-gray-900">Assign Exam to Student</h1>
+        <p class="mt-2 text-gray-600">Assigning exam to: <span class="font-medium">@student.Name</span></p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="p-6">
+            <div class="grid grid-cols-1 gap-6">
+                @foreach (var exam in Model)
+                {
+                    <div class="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-900">@exam.Title</h3>
+                                <p class="text-sm text-gray-500">@exam.Subject</p>
+                                <p class="text-sm text-gray-500 mt-1">
+                                    Questions: @(exam.Questions?.Count ?? 0) | Duration: @exam.Duration minutes
+                                </p>
+                            </div>
+                            <form asp-action="AssignExamToStudent" method="post">
+                                <input type="hidden" name="examId" value="@exam.Id" />
+                                <input type="hidden" name="studentId" value="@student.Id" />
+                                <button type="submit" 
+                                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+                                    Assign Exam
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-6">
+        <a href="@Url.Action("Students", "Teacher")" 
+           class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Back to Students
+        </a>
+    </div>
+</div>

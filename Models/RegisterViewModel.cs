@@ -5,6 +5,9 @@ namespace AppDev2Project.Models
     public class RegisterViewModel
     {
         [Required]
+        [Display(Name = "Full Name")]
+        [StringLength(100, ErrorMessage = "Name cannot be longer than 100 characters.")]
+        [RegularExpression(@"^[a-zA-Z\s]*$", ErrorMessage = "Name can only contain letters and spaces")]
         public string Name { get; set; } = null!;
 
         [Required]
@@ -22,5 +25,9 @@ namespace AppDev2Project.Models
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; } = null!;
+
+        [Required]
+        [Display(Name = "Role")]
+        public string Role { get; set; } = "Student"; // Default to Student
     }
 }

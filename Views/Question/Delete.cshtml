@@ -1,0 +1,45 @@
+@model AppDev2Project.Models.Question
+@{
+    ViewData["Title"] = "Delete Question";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-white shadow-md rounded-lg overflow-hidden p-6 max-w-3xl mx-auto">
+        <h2 class="text-2xl font-bold mb-6">Delete Question</h2>
+        <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+            <p class="text-red-700">Are you sure you want to delete this question? This action cannot be undone.</p>
+        </div>
+
+        <div class="mb-6">
+            <h3 class="font-semibold mb-2">Question Text</h3>
+            <p class="text-gray-700">@Model.QuestionText</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div>
+                <h3 class="font-semibold mb-2">Type</h3>
+                <p class="text-gray-700">@(Model.QuestionType == "multiple_choice" ? "Multiple Choice" : "Short Answer")</p>
+            </div>
+            <div>
+                <h3 class="font-semibold mb-2">Score Weight</h3>
+                <p class="text-gray-700">@Model.ScoreWeight points</p>
+            </div>
+        </div>
+
+        <form asp-action="Delete" method="post">
+            <input type="hidden" asp-for="Id" />
+            <div class="flex items-center justify-between">
+                <button type="submit" class="bg-red-500 text-white px-6 py-2 rounded-md hover:bg-red-600">
+                    Delete Question
+                </button>
+                <a asp-controller="Exam" 
+                   asp-action="Edit" 
+                   asp-route-id="@Model.ExamId" 
+                   class="text-gray-600 hover:text-gray-800">
+                    Back to Exam
+                </a>
+            </div>
+        </form>
+    </div>
+</div>

@@ -4,6 +4,7 @@ using AppDev2Project.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AppDev2Project.Migrations
 {
     [DbContext(typeof(ExaminaDatabaseContext))]
-    partial class ExaminaDatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20241216205002_AddProfilePictureUrlToUser")]
+    partial class AddProfilePictureUrlToUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,9 +33,6 @@ namespace AppDev2Project.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CompletedAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<int>("ExamId")
                         .HasColumnType("int");
 
@@ -44,7 +44,7 @@ namespace AppDev2Project.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<double>("TotalScore")
+                    b.Property<double?>("TotalScore")
                         .HasColumnType("float");
 
                     b.Property<int>("UserId")
@@ -67,15 +67,6 @@ namespace AppDev2Project.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AssignedStudentIds")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("AvailableFrom")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("AvailableUntil")
-                        .HasColumnType("datetime2");
-
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -84,16 +75,12 @@ namespace AppDev2Project.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Duration")
-                        .HasColumnType("int");
-
                     b.Property<string>("State")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Subject")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
@@ -302,21 +289,6 @@ namespace AppDev2Project.Migrations
                     b.ToTable("users", (string)null);
                 });
 
-            modelBuilder.Entity("ExamUser", b =>
-                {
-                    b.Property<int>("AssignedExamsId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("AssignedStudentsId")
-                        .HasColumnType("int");
-
-                    b.HasKey("AssignedExamsId", "AssignedStudentsId");
-
-                    b.HasIndex("AssignedStudentsId");
-
-                    b.ToTable("exam_student_assignments", (string)null);
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
                 {
                     b.Property<int>("Id")
@@ -455,7 +427,7 @@ namespace AppDev2Project.Migrations
                     b.HasOne("AppDev2Project.Models.Exam", "Exam")
                         .WithMany("CompletedExams")
                         .HasForeignKey("ExamId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("AppDev2Project.Models.User", "User")
@@ -472,7 +444,7 @@ namespace AppDev2Project.Migrations
             modelBuilder.Entity("AppDev2Project.Models.Exam", b =>
                 {
                     b.HasOne("AppDev2Project.Models.User", "Teacher")
-                        .WithMany("CreatedExams")
+                        .WithMany("Exams")
                         .HasForeignKey("TeacherId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -485,7 +457,7 @@ namespace AppDev2Project.Migrations
                     b.HasOne("AppDev2Project.Models.Exam", "Exam")
                         .WithMany("Questions")
                         .HasForeignKey("ExamId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Exam");
@@ -500,7 +472,7 @@ namespace AppDev2Project.Migrations
                     b.HasOne("AppDev2Project.Models.Question", "Question")
                         .WithMany("QuestionAttempt")
                         .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("AppDev2Project.Models.User", "User")
@@ -512,21 +484,6 @@ namespace AppDev2Project.Migrations
                     b.Navigation("Question");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("ExamUser", b =>
-                {
-                    b.HasOne("AppDev2Project.Models.Exam", null)
-                        .WithMany()
-                        .HasForeignKey("AssignedExamsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AppDev2Project.Models.User", null)
-                        .WithMany()
-                        .HasForeignKey("AssignedStudentsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
@@ -598,7 +555,7 @@ namespace AppDev2Project.Migrations
                 {
                     b.Navigation("CompletedExams");
 
-                    b.Navigation("CreatedExams");
+                    b.Navigation("Exams");
 
                     b.Navigation("QuestionAttempt");
                 });

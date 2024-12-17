@@ -1,0 +1,74 @@
+@model AppDev2Project.Models.Exam
+@{
+    ViewData["Title"] = "Create Exam";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-white shadow-md rounded-lg overflow-hidden p-6">
+        <h2 class="text-2xl font-bold mb-6">Create New Exam</h2>
+
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-red-500 mb-4"></div>
+
+            <div class="mb-4">
+                <label asp-for="Title" class="block text-gray-700 text-sm font-bold mb-2">Title *</label>
+                <input asp-for="Title" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" />
+                <span asp-validation-for="Title" class="text-red-500 text-xs"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Subject" class="block text-gray-700 text-sm font-bold mb-2">Subject *</label>
+                <input asp-for="Subject" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" />
+                <span asp-validation-for="Subject" class="text-red-500 text-xs"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Description" class="block text-gray-700 text-sm font-bold mb-2">Description</label>
+                <textarea asp-for="Description" rows="4" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"></textarea>
+                <span asp-validation-for="Description" class="text-red-500 text-xs"></span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="mb-4">
+                    <label asp-for="TotalScoreWeight" class="block text-gray-700 text-sm font-bold mb-2">Total Score Weight *</label>
+                    <input asp-for="TotalScoreWeight" type="number" value="100" min="0" max="100" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" />
+                    <span asp-validation-for="TotalScoreWeight" class="text-red-500 text-xs"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="Duration" class="block text-gray-700 text-sm font-bold mb-2">Duration (minutes) *</label>
+                    <input asp-for="Duration" type="number" value="60" min="1" max="480" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" />
+                    <span asp-validation-for="Duration" class="text-red-500 text-xs"></span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="mb-4">
+                    <label asp-for="AvailableFrom" class="block text-gray-700 text-sm font-bold mb-2">Available From *</label>
+                    <input asp-for="AvailableFrom" type="datetime-local" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" />
+                    <span asp-validation-for="AvailableFrom" class="text-red-500 text-xs"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="AvailableUntil" class="block text-gray-700 text-sm font-bold mb-2">Available Until</label>
+                    <input asp-for="AvailableUntil" type="datetime-local" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" />
+                    <span asp-validation-for="AvailableUntil" class="text-red-500 text-xs"></span>
+                </div>
+            </div>
+
+            <div class="flex justify-between mt-6">
+                <button type="submit" class="bg-teal-500 text-white px-6 py-2 rounded-md hover:bg-teal-600">
+                    Create Exam
+                </button>
+                <a asp-action="Index" class="text-gray-600 hover:text-gray-800">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+}
