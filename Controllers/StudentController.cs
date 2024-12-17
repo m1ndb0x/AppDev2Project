@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using AppDev2Project.Models;
 using AppDev2Project.Models.ViewModels;
@@ -10,10 +11,12 @@ namespace AppDev2Project.Controllers
     [Authorize(Roles = "Student")]
     public class StudentController : Controller
     {
+        private readonly UserManager<User> _userManager;
         private readonly ExaminaDatabaseContext _context;
 
-        public StudentController(ExaminaDatabaseContext context)
+        public StudentController(UserManager<User> userManager, ExaminaDatabaseContext context)
         {
+            _userManager = userManager;
             _context = context;
         }
 
@@ -21,6 +24,10 @@ namespace AppDev2Project.Controllers
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             var student = await _context.Users
+                .Include(u => u.AssignedExams)
+                    .ThenInclude(e => e.Questions)
+                .Include(u => u.CompletedExams)
+                    .ThenInclude(ce => ce.Exam)
                 .FirstOrDefaultAsync(u => u.Id == userId);
 
             if (student == null)
@@ -28,22 +35,18 @@ namespace AppDev2Project.Controllers
                 return NotFound();
             }
 
-            var viewModel = new StudentDashboardViewModel
+            // Get all assigned exams that haven't been completed yet
+            var availableExams = student.AssignedExams
+                .Where(e => !student.CompletedExams.Any(ce => ce.ExamId == e.Id))
+                .OrderBy(e => e.AvailableFrom)
+                .ToList();
+
+            var viewModel = new StudentDashboardViewModelV2
             {
-                Student = student,
-                AvailableExams = await _context.Exams
-                    .Where(e => e.State == "Complete" &&
-                           e.AvailableFrom <= DateTime.Now &&
-                           (!e.AvailableUntil.HasValue || e.AvailableUntil > DateTime.Now))
-                    .Include(e => e.Questions)
-                    .Where(e => !_context.CompletedExams
-                        .Any(ce => ce.ExamId == e.Id && ce.UserId == userId))
-                    .ToListAsync(),
-                CompletedExams = await _context.CompletedExams
-                    .Where(ce => ce.UserId == userId)
-                    .Include(ce => ce.Exam)
-                    .OrderByDescending(ce => ce.CompletedAt)
-                    .ToListAsync()
+                Name = student.Name,
+                ProfilePictureUrl = student.ProfilePictureUrl,
+                Exams = availableExams,
+                CompletedExams = student.CompletedExams.OrderByDescending(ce => ce.CompletedAt).ToList()
             };
 
             return View(viewModel);

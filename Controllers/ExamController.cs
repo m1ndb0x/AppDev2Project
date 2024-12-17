@@ -23,10 +23,31 @@ namespace AppDev2Project.Controllers
         // List All Exams (For Students or Teachers)
         public async Task<IActionResult> Index()
         {
-            var exams = await _context.Exams
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var isTeacher = User.IsInRole("Teacher");
+
+            var examsQuery = _context.Exams
                 .Include(e => e.Teacher)
-                .Include(e => e.Questions)  // Include Questions collection
-                .AsNoTracking()
+                .Include(e => e.Questions)
+                .Include(e => e.AssignedStudents)  // Include assigned students
+                .AsNoTracking();
+
+            // Filter based on role
+            if (isTeacher)
+            {
+                // Teachers only see their own created exams
+                examsQuery = examsQuery.Where(e => e.TeacherId == userId);
+            }
+            else
+            {
+                // Students see exams assigned to them that are within the available time window
+                examsQuery = examsQuery
+                    .Where(e => e.AssignedStudents.Any(s => s.Id == userId) &&
+                               e.AvailableFrom <= DateTime.Now &&
+                               (!e.AvailableUntil.HasValue || e.AvailableUntil > DateTime.Now));
+            }
+
+            var exams = await examsQuery
                 .OrderByDescending(e => e.CreatedAt)
                 .ToListAsync();
                 
@@ -39,7 +60,7 @@ namespace AppDev2Project.Controllers
             var exam = await _context.Exams
                 .Include(e => e.Teacher)
                 .Include(e => e.Questions)
-                .AsNoTracking()  // Add this for better performance
+                .AsNoTracking()
                 .FirstOrDefaultAsync(e => e.Id == id);
 
             if (exam == null)
@@ -69,35 +90,55 @@ namespace AppDev2Project.Controllers
         [HttpPost]
         [Authorize(Roles = "Teacher")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([FromForm] Exam exam)
+        public async Task<IActionResult> Create([Bind("Title,Description,Subject,TotalScoreWeight,AvailableFrom,AvailableUntil,Duration")] Exam exam)
         {
-            // Remove TeacherId from ModelState since we'll set it programmatically
-            ModelState.Remove("TeacherId");
+            // Remove Teacher validation since we'll set it manually
             ModelState.Remove("Teacher");
-            
-            if (ModelState.IsValid)
-            {
-                // Get current user's ID from claims
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (userId != null && User.IsInRole("Teacher"))
-                {
-                    exam.TeacherId = int.Parse(userId);
-                    exam.State = "Incomplete";
-                    exam.CreatedAt = DateTime.Now;
-                    
-                    // Set default availability if not specified
-                    if (exam.AvailableFrom == default)
-                    {
-                        exam.AvailableFrom = DateTime.Now;
-                    }
+            ModelState.Remove("TeacherId");
 
-                    _context.Exams.Add(exam);
-                    await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Index));
-                }
-                return Forbid();
+            if (!ModelState.IsValid)
+            {
+                return View(exam);
             }
-            return View(exam);
+
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    ModelState.AddModelError("", "Teacher ID not found. Please log in again.");
+                    return View(exam);
+                }
+
+                var teacher = await _context.Users.FindAsync(int.Parse(userId));
+                if (teacher == null)
+                {
+                    ModelState.AddModelError("", "Teacher not found. Please log in again.");
+                    return View(exam);
+                }
+
+                // Set the teacher relationship
+                exam.TeacherId = teacher.Id;
+                exam.Teacher = teacher;
+                exam.State = "Incomplete";
+                exam.CreatedAt = DateTime.UtcNow;
+                exam.Questions = new List<Question>();
+
+                if (exam.AvailableFrom == default)
+                {
+                    exam.AvailableFrom = DateTime.UtcNow;
+                }
+
+                _context.Exams.Add(exam);
+                await _context.SaveChangesAsync();
+
+                return RedirectToAction(nameof(Edit), new { id = exam.Id });
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", $"Error creating exam: {ex.Message}");
+                return View(exam);
+            }
         }
 
         // Edit Exam (GET)
@@ -236,9 +277,11 @@ namespace AppDev2Project.Controllers
         [Authorize(Roles = "Student")]
         public async Task<IActionResult> TakeExam(int id)
         {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             var exam = await _context.Exams
                 .Include(e => e.Teacher)
                 .Include(e => e.Questions)
+                .Include(e => e.AssignedStudents)
                 .FirstOrDefaultAsync(e => e.Id == id);
 
             if (exam == null)
@@ -246,14 +289,20 @@ namespace AppDev2Project.Controllers
                 return NotFound();
             }
 
-            // Check if exam is Complete and available
-            if (exam.State != "Complete")
+            // Check if student is assigned to this exam
+            if (!exam.AssignedStudents.Any(s => s.Id == userId))
             {
-                return BadRequest("This exam is not yet available.");
+                return Forbid("You are not assigned to this exam.");
+            }
+
+            // Check if exam is available
+            if (exam.AvailableFrom > DateTime.Now || 
+                (exam.AvailableUntil.HasValue && exam.AvailableUntil < DateTime.Now))
+            {
+                return BadRequest("This exam is not available at this time.");
             }
 
             // Check if student has already completed this exam
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             var alreadyCompleted = await _context.CompletedExams
                 .AnyAsync(ce => ce.ExamId == id && ce.UserId == userId);
 

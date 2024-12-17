@@ -13,8 +13,9 @@ namespace AppDev2Project.Models
 
         public DbSet<Exam> Exams { get; set; } = null!;
         public DbSet<Question> Questions { get; set; } = null!;
-        public DbSet<QuestionAttempt > QuestionAttempt  { get; set; } = null!;
+        public DbSet<QuestionAttempt> QuestionAttempt { get; set; } = null!;
         public DbSet<CompletedExam> CompletedExams { get; set; } = null!;
+        // Remove ExamStudents DbSet
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -45,9 +46,13 @@ namespace AppDev2Project.Models
                 entity.Property(e => e.AvailableFrom).IsRequired();
                 entity.Property(e => e.AvailableUntil);
                 entity.HasOne(e => e.Teacher)
-                      .WithMany(u => u.Exams)
+                      .WithMany(u => u.CreatedExams)
                       .HasForeignKey(e => e.TeacherId)
                       .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasMany(e => e.AssignedStudents)
+                    .WithMany(u => u.AssignedExams)
+                    .UsingEntity(j => j.ToTable("exam_student_assignments"));
             });
 
             modelBuilder.Entity<Question>(entity =>

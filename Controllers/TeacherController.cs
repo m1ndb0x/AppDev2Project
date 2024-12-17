@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using AppDev2Project.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
@@ -11,10 +12,12 @@ namespace AppDev2Project.Controllers
     public class TeacherController : Controller
     {
         private readonly ExaminaDatabaseContext _context;
+        private readonly UserManager<User> _userManager;
 
-        public TeacherController(ExaminaDatabaseContext context)
+        public TeacherController(ExaminaDatabaseContext context, UserManager<User> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         private int GetCurrentTeacherId()
@@ -108,6 +111,55 @@ namespace AppDev2Project.Controllers
         public IActionResult GradeExams()
         {
             return View("GradeExams");
+        }
+
+        // Student Management Methods
+        public async Task<IActionResult> Students()
+        {
+            var students = await _context.Users
+                .Where(u => u.Role == "Student")
+                .ToListAsync();
+            
+            return View("Students", students);
+        }
+
+        public async Task<IActionResult> AssignExam(string studentId)
+        {
+            var student = await _userManager.FindByIdAsync(studentId);
+            if (student == null)
+            {
+                return NotFound();
+            }
+
+            // Get available exams for this teacher
+            var teacherId = GetCurrentTeacherId();
+            var availableExams = await _context.Exams
+                .Where(e => e.TeacherId == teacherId)
+                .ToListAsync();
+
+            ViewBag.Student = student;
+            return View(availableExams);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AssignExamToStudent(int examId, int studentId)
+        {
+            var exam = await _context.Exams
+                .Include(e => e.AssignedStudents)
+                .FirstOrDefaultAsync(e => e.Id == examId);
+
+            if (exam == null) return NotFound();
+
+            var student = await _userManager.FindByIdAsync(studentId.ToString());
+            if (student == null) return NotFound();
+
+            if (!exam.AssignedStudents.Any(s => s.Id == studentId))
+            {
+                exam.AssignedStudents.Add(student);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Students));
         }
     }
 }

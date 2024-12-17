@@ -27,20 +27,21 @@
             <div class="w-64 bg-teal-600 text-white">
                 <div class="sticky top-0 h-screen w-64 bg-teal-600 text-white overflow-y-auto z-50">
                     <div class="flex items-center p-4 border-b border-teal-500">
-                        <div class="w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center">
-                        </div>
-                        <div class="ml-3">
+                        <div class="w-10 h-10 rounded-full overflow-hidden">
                             @{
                                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                                 var user = await UserManager.FindByIdAsync(userId);
                             }
+                            <img src="@user?.ProfilePictureUrl" alt="@user?.Name" class="w-full h-full object-cover" />
+                        </div>
+                        <div class="ml-3">
                             <p class="font-semibold">@(user?.Name ?? "Unknown")</p>
-                            <p class="text-sm text-gray-400">@(User.IsInRole("Teacher") ? "Teacher" : "Student")</p>
+                            <p class="text-sm text-gray-400">@user?.Role</p>
                         </div>
                     </div>
                     <div class="px-4 py-2 text-xs text-teal-200 uppercase">Main Menu</div>
                     <nav class="mt-4">
-                        @if (User.IsInRole("Student"))
+                        @if (user?.Role == "Student")
                         {
                             <a href="@Url.Action("Dashboard", "Student")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
                                 <i class="fas fa-home text-lg mr-4"></i>
@@ -51,7 +52,7 @@
                                 Exam History
                             </a>
                         }
-                        else if (User.IsInRole("Teacher"))
+                        else if (user?.Role == "Teacher")
                         {
                             <a href="@Url.Action("Dashboard", "Teacher")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
                                 <i class="fas fa-home text-lg mr-4"></i>
@@ -64,6 +65,10 @@
                             <a href="@Url.Action("Create", "Exam")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
                                 <i class="fas fa-plus text-lg mr-4"></i>
                                 Create New Exam
+                            </a>
+                            <a href="@Url.Action("Students", "Teacher")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
+                                <i class="fas fa-users text-lg mr-4"></i>
+                                Students
                             </a>
                         }
                     </nav>
@@ -93,6 +98,5 @@
     </main>
 
     <script src="~/js/site.js"></script>
-    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
