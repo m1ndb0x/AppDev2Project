@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using AppDev2Project.Models;
 using AppDev2Project.Models.ViewModels;
 using System.Security.Claims;
-
 namespace AppDev2Project.Controllers
 {
     [Authorize(Roles = "Student")]
@@ -35,18 +34,29 @@ namespace AppDev2Project.Controllers
                 return NotFound();
             }
 
-            // Get all assigned exams that haven't been completed yet
+            // Modified query to get all assigned exams that are active
             var availableExams = student.AssignedExams
-                .Where(e => !student.CompletedExams.Any(ce => ce.ExamId == e.Id))
-                .OrderBy(e => e.AvailableFrom)
+                .Where(e => e.HasStarted && 
+                           !student.CompletedExams.Any(ce => ce.ExamId == e.Id) &&
+                           e.StartedAt.HasValue &&
+                           DateTime.Now < e.StartedAt.Value.AddMinutes(e.Duration))
                 .ToList();
+
+            var examProgresses = await _context.ExamProgress
+                .Include(ep => ep.Exam)
+                    .ThenInclude(e => e.Questions)
+                .Where(ep => ep.UserId == userId && !ep.IsCompleted)
+                .ToListAsync();
 
             var viewModel = new StudentDashboardViewModelV2
             {
                 Name = student.Name,
                 ProfilePictureUrl = student.ProfilePictureUrl,
                 Exams = availableExams,
-                CompletedExams = student.CompletedExams.OrderByDescending(ce => ce.CompletedAt).ToList()
+                CompletedExams = student.CompletedExams
+                    .OrderByDescending(ce => ce.CompletedAt)
+                    .ToList(),
+                ExamProgresses = examProgresses
             };
 
             return View(viewModel);

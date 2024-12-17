@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace AppDev2Project.Models;
 
@@ -25,7 +26,12 @@ public partial class CompletedExam
     public DateTime? GradedAt { get; set; }
 
     // Navigation properties
+    [ForeignKey("ExamId")]
+    [DeleteBehavior(DeleteBehavior.NoAction)]
     public virtual Exam Exam { get; set; }
+
+    [ForeignKey("UserId")]
+    [DeleteBehavior(DeleteBehavior.NoAction)]
     public virtual User User { get; set; }
 
     [Required]

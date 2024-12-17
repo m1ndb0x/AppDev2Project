@@ -1,0 +1,380 @@
+@model AppDev2Project.Models.ViewModels.ExamProgressTrackingViewModel
+
+@{
+    ViewData["Title"] = "Track Exam Progress";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container mx-auto px-4 py-6">
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-teal-700">@Model.Exam.Title - Progress Tracking</h1>
+                <p class="text-gray-600">@Model.Exam.AssignedStudents.Count students assigned</p>
+            </div>
+            <div class="flex space-x-4">
+                <button onclick="showAssignStudentsModal()" 
+                        class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    Assign Students
+                </button>
+                @if (!Model.Exam.HasStarted)
+                {
+                    @if (!Model.Exam.AssignedStudents.Any())
+                    {
+                        <button type="button" 
+                                class="bg-gray-400 text-white px-4 py-2 rounded cursor-not-allowed" 
+                                title="Assign students before starting the exam">
+                            Start Exam
+                        </button>
+                    }
+                    else
+                    {
+                        <button onclick="showStartExamModal()" 
+                                class="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700">
+                            Start Exam
+                        </button>
+                    }
+                }
+                else
+                {
+                    <form asp-action="ExtendTimeForAll" asp-route-examId="@Model.Exam.Id" method="post" class="inline flex items-center space-x-2">
+                        <input type="number" name="additionalMinutes" class="w-20 px-2 py-1 border rounded" min="1" max="60" value="5"/>
+                        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                            Extend Time (All)
+                        </button>
+                    </form>
+                    <form asp-action="EndExam" asp-route-id="@Model.Exam.Id" method="post" class="inline">
+                        <button type="submit" class="bg-teal-600 text-white px-4 py-2 rounded hover:bg-coral-700">
+                            End Exam
+                        </button>
+                    </form>
+                }
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead>
+                    <tr>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Student
+                        </th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Time Remaining
+                        </th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Last Activity
+                        </th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Progress
+                        </th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach (var student in Model.Exam.AssignedStudents)
+                    {
+                        var progress = Model.StudentProgress.GetValueOrDefault(student.Id);
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">@student.Name</div>
+                                <div class="text-sm text-gray-500">@student.Email</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @if (progress != null)
+                                {
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-teal-100 text-teal-800">
+                                        Active
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                        Not Started
+                                    </span>
+                                }
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @if (progress != null)
+                                {
+                                    var totalMinutes = Math.Max(0, Math.Round(progress.TimeRemaining, 1));
+                                    var hours = Math.Floor(totalMinutes / 60);
+                                    var minutes = totalMinutes % 60;
+                                    
+                                    <div class="text-sm text-gray-900">
+                                        @(hours > 0 ? $"{hours:0}h " : "")@($"{minutes:0}m")
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="text-sm text-gray-500">-</div>
+                                }
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @if (progress != null)
+                                {
+                                    <div class="text-sm text-gray-900">
+                                        @progress.LastSaved.ToString("HH:mm:ss")
+                                    </div>
+                                    <div class="text-sm text-gray-500">
+                                        @((DateTime.Now - progress.LastSaved).Minutes) min ago
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="text-sm text-gray-500">-</div>
+                                }
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @if (progress != null)
+                                {
+                                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                        @{
+                                            var percentage = Model.Exam.Questions.Count > 0 
+                                                ? (progress.CompletedQuestions * 100) / Model.Exam.Questions.Count
+                                                : 0;
+                                        }
+                                        <div class="bg-teal-600 h-2.5 rounded-full" style="width: @percentage%"></div>
+                                    </div>
+                                    <div class="text-sm text-gray-500 mt-1">
+                                        @progress.CompletedQuestions of @Model.Exam.Questions.Count questions
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="text-sm text-gray-500">Not started</div>
+                                }
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @if (progress != null)
+                                {
+                                    <div class="flex space-x-2">
+                                        <form asp-action="UpdateTime" method="post" class="flex items-center space-x-2">
+                                            <input type="hidden" name="examId" value="@Model.Exam.Id" />
+                                            <input type="hidden" name="studentId" value="@student.Id" />
+                                            <input type="number" 
+                                                   name="newTime" 
+                                                   value="@Math.Max(0, Math.Round(progress.TimeRemaining, 1))" 
+                                                   class="w-20 px-2 py-1 border rounded text-sm" 
+                                                   step="1" 
+                                                   min="0"
+                                                   max="@Model.Exam.Duration" />
+                                            <button type="submit" class="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600">
+                                                Update Time
+                                            </button>
+                                        </form>
+                                        <button onclick="showKickModal(@Model.Exam.Id, @student.Id, '@student.Name')" 
+                                                class="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600">
+                                            Kick
+                                        </button>
+                                    </div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Assign Students Modal -->
+<div id="assignStudentsModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-3/4 max-w-2xl shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex justify-between items-center pb-3">
+                <h3 class="text-lg font-medium text-gray-900">Assign Students to Exam</h3>
+                <button onclick="hideAssignStudentsModal()" class="text-gray-400 hover:text-gray-500">
+                    <span class="sr-only">Close</span>
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="mt-2" id="studentsList">
+                Loading students...
+            </div>
+            <div class="mt-4 flex justify-end space-x-3">
+                <button onclick="hideAssignStudentsModal()" 
+                        class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Start Exam Confirmation Modal -->
+<div id="startExamModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Start Exam</h3>
+            <div class="mt-2 px-7 py-3">
+                <p class="text-gray-500">
+                    Are you sure you want to start this exam?<br>
+                    <span class="font-medium">@Model.Exam.AssignedStudents.Count students</span> will be able to take the exam.
+                </p>
+            </div>
+            <div class="flex justify-center mt-4 space-x-4">
+                <form asp-action="StartExam" asp-route-id="@Model.Exam.Id" method="post" class="inline">
+                    <button type="submit" class="bg-teal-500 text-white px-4 py-2 rounded-md hover:bg-teal-600">
+                        Start Exam
+                    </button>
+                </form>
+                <button onclick="hideStartExamModal()" 
+                        class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Kick Confirmation Modal -->
+<div id="kickModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Confirm Student Removal</h3>
+            <div class="mt-2 px-7 py-3">
+                <p class="text-sm text-gray-500">
+                    Are you sure you want to remove <span id="studentName" class="font-medium"></span> from this exam?
+                </p>
+            </div>
+            <div class="flex justify-center mt-4 space-x-4">
+                <form id="kickForm" method="post" class="inline">
+                    <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">
+                        Remove Student
+                    </button>
+                </form>
+                <button onclick="hideKickModal()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function updateExamStatus() {
+            fetch('@Url.Action("GetExamStatus", new { id = Model.Exam.Id })')
+                .then(response => response.json())
+                .then(data => {
+                    // Update UI with new status
+                    // This will be called every minute
+                    location.reload();
+                });
+        }
+
+        // Update status every minute
+        setInterval(updateExamStatus, 60000);
+
+        function showStartExamModal() {
+            document.getElementById('startExamModal').classList.remove('hidden');
+        }
+
+        function hideStartExamModal() {
+            document.getElementById('startExamModal').classList.add('hidden');
+        }
+
+        // Close modal if clicking outside
+        document.getElementById('startExamModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideStartExamModal();
+            }
+        });
+
+        function showKickModal(examId, studentId, studentName) {
+            document.getElementById('studentName').textContent = studentName;
+            const kickForm = document.getElementById('kickForm');
+            kickForm.action = `/Exam/KickStudent?examId=${examId}&studentId=${studentId}`;
+            document.getElementById('kickModal').classList.remove('hidden');
+        }
+
+        function hideKickModal() {
+            document.getElementById('kickModal').classList.add('hidden');
+        }
+
+        // Close modal if clicking outside
+        document.getElementById('kickModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideKickModal();
+            }
+        });
+
+        function showAssignStudentsModal() {
+            const modal = document.getElementById('assignStudentsModal');
+            modal.classList.remove('hidden');
+            fetchAvailableStudents();
+        }
+
+        function hideAssignStudentsModal() {
+            document.getElementById('assignStudentsModal').classList.add('hidden');
+        }
+
+        async function fetchAvailableStudents() {
+            try {
+                const response = await fetch(`/Exam/GetAvailableStudents?examId=@Model.Exam.Id`);
+                const students = await response.json();
+                renderStudentsList(students);
+            } catch (error) {
+                console.error('Error fetching students:', error);
+                document.getElementById('studentsList').innerHTML = 'Error loading students.';
+            }
+        }
+
+        function renderStudentsList(students) {
+            const list = document.getElementById('studentsList');
+            if (!students.length) {
+                list.innerHTML = '<p class="text-gray-500 text-center py-4">No available students found.</p>';
+                return;
+            }
+
+            list.innerHTML = `
+                <div class="grid grid-cols-1 gap-4">
+                    ${students.map(student => `
+                        <div class="flex items-center justify-between p-3 border rounded hover:bg-gray-50">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-full overflow-hidden">
+                                    <img src="${student.profilePictureUrl || '/images/default-avatar.png'}" 
+                                         alt="${student.name}"
+                                         class="w-full h-full object-cover"
+                                         onerror="this.src='/images/default-avatar.png'">
+                                </div>
+                                <div>
+                                    <div class="font-medium">${student.name}</div>
+                                    <div class="text-sm text-gray-500">${student.email}</div>
+                                </div>
+                            </div>
+                            <form action="/Exam/AssignStudent" method="post" class="inline">
+                                <input type="hidden" name="examId" value="@Model.Exam.Id" />
+                                <input type="hidden" name="studentId" value="${student.id}" />
+                                ${getAntiForgeryToken()}
+                                <button type="submit" class="bg-teal-500 text-white px-3 py-1 rounded hover:bg-teal-600">
+                                    Assign
+                                </button>
+                            </form>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function getAntiForgeryToken() {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            return `<input type="hidden" name="__RequestVerificationToken" value="${token}" />`;
+        }
+
+        // Close modal if clicking outside
+        document.getElementById('assignStudentsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideAssignStudentsModal();
+            }
+        });
+    </script>
+}
