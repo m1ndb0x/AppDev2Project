@@ -15,7 +15,8 @@ namespace AppDev2Project.Models;
 
 public partial class User : IdentityUser<int> // Derive from IdentityUser<int>
 {
-    public string Name { get; set; } = null!;
+    [PersonalData]
+    public string Name { get; set; } = null!;  // This is the display name that can contain spaces
 
     // [Required]
     // [StringLength(50)]

@@ -1,74 +1,139 @@
+@using Microsoft.AspNetCore.Identity
+@using System.Security.Claims
+@inject UserManager<AppDev2Project.Models.User> UserManager
 @model dynamic
 @{
     ViewData["Title"] = "Teacher Dashboard";
 }
 
-<div class="flex min-h-screen bg-gray-100">
+<div class="flex h-full bg-white">
     <!-- Sidebar -->
-    <div class="w-64 bg-gray-800 text-white flex flex-col">
-        <div class="flex items-center p-4">
-            <img src="/path/to/avatar.png" alt="Teacher Avatar" class="w-12 h-12 rounded-full mr-4">
-            <span class="font-bold">Teacher Name</span>
+    <div class="w-64 bg-teal-600 text-white">
+        <div class="sticky top-0 h-screen w-64 bg-teal-600 text-white overflow-y-auto z-50">
+            <div class="flex items-center p-4 border-b border-teal-500">
+                <div class="w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center">
+                    @* <span class="text-xl">@(User.Identity?.Name?[0]?.ToString() ?? "T")</span> *@
+                </div>
+                <div class="ml-3">
+                    @{
+                        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                        var user = await UserManager.FindByIdAsync(userId);
+                    }
+                    <p class="font-semibold">@(user?.Name ?? "Unknown")</p>
+                    <p class="text-sm text-gray-400">Teacher</p>
+                </div>
+            </div>
+            <div class="px-4 py-2 text-xs text-teal-200 uppercase">Main Menu</div>
+            <nav class="mt-4">
+                <a href="@Url.Action("Index", "Exam")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
+                    <i class="fas fa-file-alt text-lg mr-4"></i>
+                    Exams
+                </a>
+                <a href="@Url.Action("Create", "Exam")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
+                    <i class="fas fa-plus text-lg mr-4"></i>
+                    Create New Exam
+                </a>
+            </nav>
         </div>
-        <nav class="mt-4">
-            <a href="/Category" class="block py-2 px-4 hover:bg-gray-700">Category</a>
-            <a href="/Subject" class="block py-2 px-4 hover:bg-gray-700">Subject</a>
-            <a href="/Exam" class="block py-2 px-4 hover:bg-gray-700">Exam</a>
-            <a href="/Question" class="block py-2 px-4 hover:bg-gray-700">Question</a>
-            <a href="/Result" class="block py-2 px-4 hover:bg-gray-700">Result</a>
-        </nav>
     </div>
 
     <!-- Main Content -->
-    <div class="flex-1 p-6">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold">Online Exam System</h1>
-            <div>
-                <a href="/AdminPanel" class="text-blue-500 hover:underline mr-4">Admin Panel</a>
-                <a href="/Logout" class="text-red-500 hover:underline">Log out</a>
+    <div class="flex-1 flex flex-col">
+        <header class="bg-white shadow flex-shrink-0">
+            <div class="px-6 py-4">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-2xl font-bold text-gray-900 ml-2">Teacher Dashboard</h1>
+                    <div class="flex items-center">
+                        <span class="mr-4">@DateTime.Now.ToString("dddd, MMMM d, yyyy")</span>
+                    </div>
+                </div>
             </div>
-        </div>
+        </header>
 
-        <!-- Content Section -->
-        <div class="bg-white rounded shadow p-4">
-            <div class="bg-red-500 text-white py-2 px-4 rounded-t font-bold">
-                Exam Question
+        <main class="flex-1 p-6 overflow-y-auto">
+            <!-- Quick Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="bg-white rounded-lg shadow-sm border border-teal-100 p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-teal-50 text-teal-600">
+                            <i class="fas fa-file-alt text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h2 class="text-teal-600 text-sm">Total Exams</h2>
+                            <p class="text-2xl font-semibold text-teal-700">@ViewBag.TotalExams</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm border border-teal-100 p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-teal-50 text-teal-600">
+                            <i class="fas fa-check-circle text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h2 class="text-teal-600 text-sm">Active Exams</h2>
+                            <p class="text-2xl font-semibold text-teal-700">@(ViewBag.ActiveExams ?? 0)</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm border border-teal-100 p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-teal-50 text-teal-600">
+                            <i class="fas fa-question-circle text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h2 class="text-teal-600 text-sm">Total Questions</h2>
+                            <p class="text-2xl font-semibold text-teal-700">@(ViewBag.TotalQuestions ?? 0)</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <table class="w-full border-collapse border border-gray-300">
-                <thead>
-                    <tr class="bg-gray-100">
-                        <th class="border border-gray-300 py-2 px-4 text-left">Exam Name</th>
-                        <th class="border border-gray-300 py-2 px-4 text-left">Question</th>
-                        <th class="border border-gray-300 py-2 px-4 text-center">Options</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="border border-gray-300 py-2 px-4">Sample 1</td>
-                        <td class="border border-gray-300 py-2 px-4">Variable for integers</td>
-                        <td class="border border-gray-300 py-2 px-4 text-center">
-                            <button class="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600">Edit</button>
-                            <button class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 ml-2">Delete</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="border border-gray-300 py-2 px-4">Sample 1</td>
-                        <td class="border border-gray-300 py-2 px-4">In programming "1" + "1"?</td>
-                        <td class="border border-gray-300 py-2 px-4 text-center">
-                            <button class="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600">Edit</button>
-                            <button class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 ml-2">Delete</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="border border-gray-300 py-2 px-4">Sample 1</td>
-                        <td class="border border-gray-300 py-2 px-4">Using Java Programming give me a sample output of "Hello World"</td>
-                        <td class="border border-gray-300 py-2 px-4 text-center">
-                            <button class="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600">Edit</button>
-                            <button class="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 ml-2">Delete</button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+
+            <!-- Recent Exams -->
+            <div class="bg-white rounded-lg shadow-sm border border-teal-100">
+                <div class="px-6 py-4 border-b border-teal-100">
+                    <h2 class="text-xl font-semibold text-teal-700 ml-2">Recent Exams</h2>
+                </div>
+                <div class="p-6">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead>
+                                <tr>
+                                    <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                                    <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                                    <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @foreach (var exam in ViewBag.RecentExams)
+                                {
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">@exam.Title</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-500">@exam.Subject</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                @(exam.State == "Complete" ? "bg-teal-100 text-teal-800" : "bg-coral-100 text-coral-800")">
+                                                @exam.State
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <a href="@Url.Action("Edit", "Exam", new { id = exam.Id })" class="text-teal-600 hover:text-teal-800 mr-4">Edit</a>
+                                            <a href="@Url.Action("Details", "Exam", new { id = exam.Id })" class="text-coral-600 hover:text-coral-700">View</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4 text-right">
+                        <a href="@Url.Action("Index", "Exam")" class="text-teal-600 hover:text-teal-800">View All Exams →</a>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 </div>

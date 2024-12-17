@@ -36,9 +36,9 @@ namespace AppDev2Project.Controllers
             {
                 var user = new User
                 {
-                    UserName = model.Email,
+                    UserName = model.Email, // Use email as username for Identity
                     Email = model.Email,
-                    Name = model.Name,
+                    Name = model.Name,      // Name can contain spaces
                     Role = model.Role // Assuming you added Role to RegisterViewModel
                 };
 

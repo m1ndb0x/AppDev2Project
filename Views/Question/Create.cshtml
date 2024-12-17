@@ -1,7 +1,7 @@
 @model AppDev2Project.Models.Question
-
 @{
     ViewData["Title"] = "Create Question";
+    Layout = "_DashboardLayout";
 }
 
 <div class="container mx-auto px-4 py-8">
@@ -37,6 +37,7 @@
                     <option value="multiple_choice">Multiple Choice</option>
                     <option value="short_answer">Short Answer</option>
                 </select>
+                <span asp-validation-for="QuestionType" class="text-red-500 text-sm"></span>
                 <p class="text-sm text-gray-500 mt-1">Choose 'Multiple Choice' for predefined options or 'Short Answer' for free-form responses</p>
             </div>
 
@@ -117,22 +118,71 @@
     
     <script>
         $(document).ready(function() {
-            function toggleChoices() {
+            const choicesSection = $('#choicesSection');
+            const choiceInputs = $('#choicesSection input');
+            const correctAnswerHint = $('#correctAnswerHint');
+            const correctAnswerInput = $('#CorrectAnswer');
+            
+            // Hide choices section initially
+            choicesSection.hide();
+            
+            function updateFormValidation() {
                 const type = $('#questionType').val();
                 if (type === 'multiple_choice') {
-                    $('#choicesSection').slideDown();
-                    $('#correctAnswerHint').text('Enter the letter of the correct answer (A, B, C, or D)');
-                } else if (type === 'short_answer') {
-                    $('#choicesSection').slideUp();
-                    $('#correctAnswerHint').text('Enter the expected answer text');
+                    choicesSection.show();
+                    choiceInputs.prop('required', true);
+                    correctAnswerInput.attr('pattern', '[A-Da-d]');
+                    correctAnswerInput.attr('maxlength', '1');
+                    correctAnswerHint.text('Enter the letter of the correct answer (A, B, C, or D)');
                 } else {
-                    $('#choicesSection').hide();
-                    $('#correctAnswerHint').text('');
+                    choicesSection.hide();
+                    choiceInputs.prop('required', false);
+                    correctAnswerInput.removeAttr('pattern');
+                    correctAnswerInput.removeAttr('maxlength');
+                    correctAnswerHint.text(type === 'short_answer' ? 'Enter the expected answer text' : '');
                 }
             }
             
-            $('#questionType').change(toggleChoices);
-            toggleChoices();
+            $('#questionType').change(updateFormValidation);
+            updateFormValidation();
+
+            $('form').on('submit', function(e) {
+                const type = $('#questionType').val();
+                if (!type) {
+                    e.preventDefault();
+                    alert('Please select a question type');
+                    return;
+                }
+
+                if (type === 'multiple_choice') {
+                    const answer = $('#CorrectAnswer').val().toUpperCase();
+                    if (!['A', 'B', 'C', 'D'].includes(answer)) {
+                        e.preventDefault();
+                        alert('For multiple choice questions, correct answer must be A, B, C, or D');
+                        return;
+                    }
+
+                    let emptyChoices = false;
+                    $('#choicesSection input').each(function() {
+                        if (!$(this).val()) {
+                            emptyChoices = true;
+                            return false;
+                        }
+                    });
+
+                    if (emptyChoices) {
+                        e.preventDefault();
+                        alert('All choices must be filled for multiple choice questions');
+                        return;
+                    }
+                }
+
+                // Form is valid, let it submit
+                return true;
+            });
+
+            // Initialize form state
+            updateFormValidation();
         });
     </script>
 }

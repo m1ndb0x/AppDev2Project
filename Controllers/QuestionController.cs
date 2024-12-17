@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using Microsoft.Extensions.Logging; // Add this at the top
 
 namespace AppDev2Project.Controllers
 {
@@ -12,15 +13,37 @@ namespace AppDev2Project.Controllers
     public class QuestionController : Controller
     {
         private readonly ExaminaDatabaseContext _context;
+        private readonly ILogger<QuestionController> _logger; // Add logger
 
-        public QuestionController(ExaminaDatabaseContext context)
+        public QuestionController(ExaminaDatabaseContext context, ILogger<QuestionController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         public IActionResult Create(int examId)
         {
-            var question = new Question { ExamId = examId };
+            var exam = _context.Exams.Find(examId);
+            if (exam == null)
+            {
+                return NotFound();
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (exam.TeacherId != int.Parse(userId))
+            {
+                return Forbid();
+            }
+
+            var maxOrder = _context.Questions
+                .Where(q => q.ExamId == examId)
+                .Max(q => (int?)q.Order) ?? 0;
+
+            var question = new Question { 
+                ExamId = examId,
+                Order = maxOrder + 1
+            };
+            
             return View(question);
         }
 
@@ -28,6 +51,114 @@ namespace AppDev2Project.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("ExamId,QuestionText,QuestionType,ChoiceA,ChoiceB,ChoiceC,ChoiceD,CorrectAnswer,ScoreWeight,Order")] Question question)
         {
+            try
+            {
+                _logger.LogInformation($"Attempting to create question for exam {question.ExamId}");
+
+                // Remove Exam from ModelState since it's a navigation property
+                ModelState.Remove("Exam");
+
+                // Log all model state errors
+                if (!ModelState.IsValid)
+                {
+                    foreach (var modelState in ModelState.Values)
+                    {
+                        foreach (var error in modelState.Errors)
+                        {
+                            _logger.LogWarning($"Model validation error: {error.ErrorMessage}");
+                        }
+                    }
+                    return View(question);
+                }
+
+                var exam = await _context.Exams.FindAsync(question.ExamId);
+                if (exam == null)
+                {
+                    _logger.LogWarning($"Exam {question.ExamId} not found");
+                    return NotFound("Exam not found");
+                }
+
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (exam.TeacherId != int.Parse(userId))
+                {
+                    _logger.LogWarning($"User {userId} not authorized for exam {question.ExamId}");
+                    return Forbid();
+                }
+
+                // Set default values
+                if (!question.Order.HasValue)
+                {
+                    question.Order = await _context.Questions
+                        .Where(q => q.ExamId == question.ExamId)
+                        .MaxAsync(q => (int?)q.Order) ?? 0 + 1;
+                }
+
+                if (question.ScoreWeight <= 0)
+                {
+                    question.ScoreWeight = 1.0;
+                }
+
+                // Process based on question type
+                if (question.QuestionType == "multiple_choice")
+                {
+                    question.CorrectAnswer = question.CorrectAnswer.ToUpper();
+                }
+                else
+                {
+                    question.ChoiceA = null;
+                    question.ChoiceB = null;
+                    question.ChoiceC = null;
+                    question.ChoiceD = null;
+                }
+
+                _context.Questions.Add(question);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"Question created successfully for exam {question.ExamId}");
+                return RedirectToAction("Edit", "Exam", new { id = question.ExamId });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating question");
+                ModelState.AddModelError("", "Failed to create question. Please try again.");
+                return View(question);
+            }
+        }
+
+        // GET: Edit Question
+        public async Task<IActionResult> Edit(int id)
+        {
+            var question = await _context.Questions
+                .Include(q => q.Exam)
+                .FirstOrDefaultAsync(q => q.Id == id);
+
+            if (question == null)
+            {
+                return NotFound();
+            }
+
+            // Verify teacher ownership
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (question.Exam.TeacherId != int.Parse(userId))
+            {
+                return Forbid();
+            }
+
+            return View(question);
+        }
+
+        // POST: Edit Question
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, [Bind("Id,ExamId,QuestionText,QuestionType,ChoiceA,ChoiceB,ChoiceC,ChoiceD,CorrectAnswer,ScoreWeight,Order")] Question question)
+        {
+            if (id != question.Id)
+            {
+                return NotFound();
+            }
+
+            ModelState.Remove("Exam");
+
             if (ModelState.IsValid)
             {
                 try
@@ -35,58 +166,94 @@ namespace AppDev2Project.Controllers
                     var exam = await _context.Exams.FindAsync(question.ExamId);
                     if (exam == null)
                     {
-                        return NotFound();
+                        return NotFound("Exam not found");
                     }
 
-                    // Validate teacher ownership
                     var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                     if (exam.TeacherId != int.Parse(userId))
                     {
                         return Forbid();
                     }
 
-                    // Validate multiple choice questions
+                    // Handle multiple choice validation
                     if (question.QuestionType == "multiple_choice")
                     {
-                        if (string.IsNullOrEmpty(question.ChoiceA) || 
-                            string.IsNullOrEmpty(question.ChoiceB) || 
-                            string.IsNullOrEmpty(question.ChoiceC) || 
-                            string.IsNullOrEmpty(question.ChoiceD))
-                        {
-                            ModelState.AddModelError("", "All choices must be provided for multiple choice questions");
-                            return View(question);
-                        }
-
-                        // Validate correct answer is A, B, C, or D
-                        if (!new[] { "A", "B", "C", "D" }.Contains(question.CorrectAnswer.ToUpper()))
-                        {
-                            ModelState.AddModelError("CorrectAnswer", "Correct answer must be A, B, C, or D for multiple choice questions");
-                            return View(question);
-                        }
+                        question.CorrectAnswer = question.CorrectAnswer.ToUpper();
                     }
-
-                    // Set order if not specified
-                    if (!question.Order.HasValue)
+                    else
                     {
-                        var maxOrder = await _context.Questions
-                            .Where(q => q.ExamId == question.ExamId)
-                            .MaxAsync(q => (int?)q.Order) ?? 0;
-                        question.Order = maxOrder + 1;
+                        question.ChoiceA = null;
+                        question.ChoiceB = null;
+                        question.ChoiceC = null;
+                        question.ChoiceD = null;
                     }
 
-                    _context.Questions.Add(question);
+                    _context.Update(question);
                     await _context.SaveChangesAsync();
                     return RedirectToAction("Edit", "Exam", new { id = question.ExamId });
                 }
-                catch (Exception ex)
+                catch (DbUpdateConcurrencyException)
                 {
-                    ModelState.AddModelError("", "An error occurred while saving the question. Please try again.");
-                    // Log the exception details here
+                    if (!QuestionExists(question.Id))
+                    {
+                        return NotFound();
+                    }
+                    throw;
                 }
             }
-
-            // If we got this far, something failed, redisplay form
             return View(question);
+        }
+
+        // GET: Delete Question
+        public async Task<IActionResult> Delete(int id)
+        {
+            var question = await _context.Questions
+                .Include(q => q.Exam)
+                .FirstOrDefaultAsync(q => q.Id == id);
+
+            if (question == null)
+            {
+                return NotFound();
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (question.Exam.TeacherId != int.Parse(userId))
+            {
+                return Forbid();
+            }
+
+            return View(question);
+        }
+
+        // POST: Delete Question
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var question = await _context.Questions
+                .Include(q => q.Exam)
+                .FirstOrDefaultAsync(q => q.Id == id);
+
+            if (question == null)
+            {
+                return NotFound();
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (question.Exam.TeacherId != int.Parse(userId))
+            {
+                return Forbid();
+            }
+
+            _context.Questions.Remove(question);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Edit", "Exam", new { id = question.ExamId });
+        }
+
+        private bool QuestionExists(int id)
+        {
+            return _context.Questions.Any(e => e.Id == id);
         }
     }
 }

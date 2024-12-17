@@ -20,25 +20,39 @@ namespace AppDev2Project.Controllers
         }
 
         // List All Exams (For Students or Teachers)
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var exams = _context.Exams
+            var exams = await _context.Exams
                 .Include(e => e.Teacher)
-                .ToList();
+                .Include(e => e.Questions)  // Include Questions collection
+                .AsNoTracking()
+                .OrderByDescending(e => e.CreatedAt)
+                .ToListAsync();
+                
             return View(exams);
         }
 
         // View Exam Details
-        public IActionResult Details(int id)
+        public async Task<IActionResult> Details(int id)
         {
-            var exam = _context.Exams
+            var exam = await _context.Exams
                 .Include(e => e.Teacher)
                 .Include(e => e.Questions)
-                .FirstOrDefault(e => e.Id == id);
+                .AsNoTracking()  // Add this for better performance
+                .FirstOrDefaultAsync(e => e.Id == id);
+
             if (exam == null)
             {
                 return NotFound();
             }
+
+            // Force collection load and sorting
+            var questions = await _context.Questions
+                .Where(q => q.ExamId == id)
+                .OrderBy(q => q.Order)
+                .ToListAsync();
+
+            exam.Questions = questions;
 
             return View(exam);
         }

@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using AppDev2Project.Models;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace AppDev2Project.Controllers
 {
@@ -25,9 +27,40 @@ namespace AppDev2Project.Controllers
         }
 
         // Dashboard View
-        public IActionResult Dashboard()
+        public async Task<IActionResult> Dashboard()
         {
-            return View("Dashboard");
+            var teacherId = GetCurrentTeacherId();
+            
+            // Get exam statistics
+            ViewBag.TotalExams = await _context.Exams
+                .Where(e => e.TeacherId == teacherId)
+                .CountAsync();
+
+            ViewBag.ActiveExams = await _context.Exams
+                .Where(e => e.TeacherId == teacherId && e.State == "Complete")
+                .CountAsync();
+
+            ViewBag.TotalQuestions = await _context.Questions
+                .Include(q => q.Exam)
+                .Where(q => q.Exam.TeacherId == teacherId)
+                .CountAsync();
+
+            // Get recent exams
+            ViewBag.RecentExams = await _context.Exams
+                .Where(e => e.TeacherId == teacherId)
+                .OrderByDescending(e => e.CreatedAt)
+                .Take(5)
+                .Select(e => new
+                {
+                    Id = e.Id,
+                    Title = e.Title,
+                    Subject = e.Subject,
+                    State = e.State,
+                    QuestionsCount = e.Questions.Count
+                })
+                .ToListAsync();
+
+            return View();
         }
 
         // Create Exam View
