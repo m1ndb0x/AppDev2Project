@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Security.Claims;
+using AppDev2Project.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -109,6 +110,9 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Add this line before app.MapControllers()
+app.UseUserActivity();
 
 app.MapControllers();
 
