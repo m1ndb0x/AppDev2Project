@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using AppDev2Project.Services;
 using AppDev2Project.Models;
 using System.IO;
@@ -35,11 +36,15 @@ namespace AppDev2Project.Controllers
                 return View();
             }
 
-            var userEmail = User.Identity.Name; // Assuming Identity.Name stores the email...
+            // Get the current logged-in user's email
+            var userEmail = User.Identity?.Name; // Assuming Identity.Name stores the email...
+            if (string.IsNullOrEmpty(userEmail)) return Unauthorized();
+
+            // RegisterViewModel the user from the db using their email
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
             if (user == null) return Unauthorized();
+
             var userId = user.Id;
-            var user = await _dbContext.Users.FindAsync(userId);
 
             if (user == null)
             {
@@ -55,17 +60,19 @@ namespace AppDev2Project.Controllers
             }
 
             // Update user's Pfp URL
-            user.PfpUrl = $"{_blobStorageService.GetBlobUrl(ContainerName, fileName)}";
+            user.ProfilePictureUrl = $"{_blobStorageService.GetBlobUrl(ContainerName, fileName)}";
             await _dbContext.SaveChangesAsync();
 
-if (User.IsInRole("Student"))
-{
-    return RedirectToAction("Index", "StudentDashboard");
-}
-else if (User.IsInRole("Teacher"))
-{
-    return RedirectToAction("Index", "TeacherDashboard");
-}
+            if (User.IsInRole("Student"))
+            {
+                return RedirectToAction("Index", "StudentDashboard");
+            }
+            else if (User.IsInRole("Teacher"))
+            {
+                return RedirectToAction("Index", "TeacherDashboard");
+            }
+            // Fallback redirect if no role is found
+            return RedirectToAction("Index", "Home");
         }
 
         // Action to get a user's profile picture
@@ -74,13 +81,13 @@ else if (User.IsInRole("Teacher"))
         {
             var user = await _dbContext.Users.FindAsync(userId);
 
-            if (user == null || string.IsNullOrEmpty(user.PfpUrl))
+            if (user == null || string.IsNullOrEmpty(user.ProfilePictureUrl))
             {
                 // Generate default initials-based picture
                 return File(GenerateInitialsImage(user?.Name ?? "User"), "image/png");
             }
 
-            return Redirect(user.PfpUrl); // Redirect to blob URL
+            return Redirect(user.ProfilePictureUrl); // Redirect to blob URL
         }
 
         // Utility method to generate initials-based image
@@ -90,5 +97,17 @@ else if (User.IsInRole("Teacher"))
             // Placeholder for now:
             return System.Text.Encoding.UTF8.GetBytes("Initials Placeholder");
         }
+
+        private string GenerateDefaultPfp(string userName)
+        {
+            // Take the first letter of each word in the username
+            var initials = string.Join("", userName.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                                                   .Select(word => word[0]))
+                                  .ToUpper();
+
+            // Use a placeholder service like gravatar, or create an SVG
+            return $"https://via.placeholder.com/150/0000FF/FFFFFF?text={initials}";
+        }
+
     }
 }

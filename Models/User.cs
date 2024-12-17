@@ -29,4 +29,21 @@ public partial class User : IdentityUser<int> // Derive from IdentityUser<int>
 
     public string ProfilePictureUrl { get; set; } = string.Empty;
 
+    // Property to get user's initials
+    public string Initials
+    {
+        get
+        {
+            if (!string.IsNullOrEmpty(Name))
+            {
+                var initials = string.Join("", Name.Split(' ')
+                                    .Where(w => !string.IsNullOrEmpty(w))
+                                    .Select(w => w[0]))
+                                    .ToUpper();
+                return initials.Length > 2 ? initials.Substring(0, 2) : initials;
+            }
+            return "NA"; // Default fallback if Name is empty
+        }
+    }
+
 }

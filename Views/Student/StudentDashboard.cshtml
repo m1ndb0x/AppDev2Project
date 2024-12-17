@@ -4,7 +4,16 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1 class="text-2xl font-bold mb-6">Welcome to the Student Dashboard</h1>
+@* Show pfp and user name as welcome *@
+<div class="flex items-center mb-6">
+    <img src="@Model.ProfilePictureUrl" alt="Profile Picture" class="w-16 h-16 rounded-full mr-4" />
+    <h1 class="text-2xl font-bold">Welcome, @Model.Name</h1>
+</div>
+
+<h1 class="text-2xl font-bold mb-6 flex items-center">
+    <img src="@Model.ProfilePictureUrl" alt="Profile Picture" class="rounded-full h-12 w-12 mr-4" />
+    Welcome to the Student Dashboard
+</h1>
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     @for (int i = 1; i <= 6; i++)

@@ -37,7 +37,9 @@ namespace AppDev2Project.Controllers
                     UserName = model.Email,
                     Email = model.Email,
                     Name = model.Name,
-                    Role = "Student" //Default Role 
+                    Role = "Student", //Default Role 
+                    ProfilePictureUrl = GenerateDefaultPfp(model.Name) // Set default PFP
+
                 };
 
                 var result = await _userManager.CreateAsync(user, model.Password);
@@ -56,7 +58,6 @@ namespace AppDev2Project.Controllers
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
             }
-
             return View("Register");
         }
 
@@ -111,6 +112,14 @@ namespace AppDev2Project.Controllers
             await _signInManager.SignOutAsync();
             _logger.LogInformation("User logged out.");
             return RedirectToAction("Login", "Account");
+        }
+
+        // Generate default profile picture URL with initials
+        private string GenerateDefaultPfp(string name)
+        {
+            // Generate the initials-based image URL
+            var initials = string.Join("", name.Split(' ').Select(w => w[0])).ToUpper();
+            return $"https://ui-avatars.com/api/?name={initials}&background=random&color=fff";
         }
     }
 }
