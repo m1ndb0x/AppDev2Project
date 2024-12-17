@@ -1,3 +1,29 @@
+2024/12/16 Dimitri
+1. Done since last scrum
+- 
+2. Plan until next Scrum
+- 
+3. Need assistance / figure things out
+- 
+
+2024/12/16 Alexandre
+1. Done since last scrum
+- login/register
+2. Plan until next Scrum
+-  implement blob nad pfp logic
+3. Need assistance / figure things out
+- 
+
+2024/12/16 Michael
+1. Done since last scrum
+- 
+- 
+2. Plan until next Scrum
+- 
+3. Need assistance / figure things out
+- 
+________________________________________________________________________________________
+
 2024/12/14 Dimitri
 1. Done since last scrum
 - fixed db connection and tables
