@@ -12,6 +12,15 @@
         <h1 class="text-2xl font-bold ml-4">Welcome, @Model.Name</h1>
     </div>
 
+    @if (Model.Exams.Any(e => e.HasStarted && e.StartedAt?.AddMinutes(5) > DateTime.Now))
+    {
+        <script>
+            window.onload = function() {
+                showNotification('You have new exam(s) available!', 'info');
+            }
+        </script>
+    }
+
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <!-- Ongoing Exams -->
         <div class="bg-white shadow-md rounded-lg p-6">

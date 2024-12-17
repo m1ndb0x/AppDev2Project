@@ -45,6 +45,19 @@ namespace AppDev2Project.Controllers
                                DateTime.Now < e.StartedAt.Value.AddMinutes(e.Duration))
                     .ToList();
 
+                // Check for new exams
+                var newExams = availableExams.Where(e => e.HasStarted && e.StartedAt?.AddMinutes(5) > DateTime.Now);
+                if (newExams.Any())
+                {
+                    TempData["Info"] = $"You have {newExams.Count()} new exam(s) available!";
+                }
+
+                // Check for specific exam notifications
+                if (TempData[$"NewExam_{userId}"] != null)
+                {
+                    TempData["Success"] = TempData[$"NewExam_{userId}"].ToString();
+                }
+
                 var examProgresses = await _context.ExamProgress
                     .Include(ep => ep.Exam)
                         .ThenInclude(e => e.Questions)

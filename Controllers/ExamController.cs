@@ -640,6 +640,12 @@ namespace AppDev2Project.Controllers
             exam.StartedAt = DateTime.Now;
             await _context.SaveChangesAsync();
 
+            // Add notification for assigned students
+            foreach (var student in exam.AssignedStudents)
+            {
+                TempData[$"NewExam_{student.Id}"] = $"New exam available: {exam.Title}";
+            }
+
             TempData["Success"] = $"Exam started successfully with {exam.AssignedStudents.Count} student(s).";
             return RedirectToAction(nameof(TrackProgress), new { id });
         }
