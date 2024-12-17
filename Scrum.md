@@ -16,10 +16,9 @@
 
 2024/12/17 Michael
 1. Done since last scrum
-- 
-- 
+- finish up settings and styling
 2. Plan until next Scrum
-- 
+- polish up site + hosting
 3. Need assistance / figure things out
 - 
 ________________________________________________________________________________________
@@ -42,10 +41,9 @@ ________________________________________________________________________________
 
 2024/12/16 Michael
 1. Done since last scrum
-- 
-- 
+- edit directory issues and work on settings
 2. Plan until next Scrum
-- 
+- finish settings page and have it work based on both roles
 3. Need assistance / figure things out
 - 
 ________________________________________________________________________________________
