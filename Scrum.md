@@ -1,3 +1,30 @@
+2024/12/17 Dimitri
+1. Done since last scrum
+- General design
+- exam creation, assign, grading
+- worked on student dashboard
+2. Plan until next Scrum
+- clean bugs and finalize styles
+3. Need assistance / figure things out
+- 
+
+2024/12/17 Alexandre
+1. Done since last scrum
+- Blob integration
+2. Plan until next Scrum
+- finialize pfp logic
+3. Need assistance / figure things out
+- 
+
+2024/12/17 Michael
+1. Done since last scrum
+- finish up settings and styling
+2. Plan until next Scrum
+- polish up site + hosting
+3. Need assistance / figure things out
+- 
+________________________________________________________________________________________
+
 2024/12/16 Dimitri
 1. Done since last scrum
 - teacher dash + styles
@@ -10,16 +37,15 @@
 1. Done since last scrum
 - login/register
 2. Plan until next Scrum
--  implement blob nad pfp logic
+-  implement blob and pfp logic
 3. Need assistance / figure things out
 - 
 
 2024/12/16 Michael
 1. Done since last scrum
-- 
-- 
+- edit directory issues and work on settings
 2. Plan until next Scrum
-- 
+- finish settings page and have it work based on both roles
 3. Need assistance / figure things out
 - 
 ________________________________________________________________________________________
