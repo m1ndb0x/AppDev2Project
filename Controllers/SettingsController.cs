@@ -20,7 +20,7 @@ namespace AppDev2Project.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Settings()
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound();
