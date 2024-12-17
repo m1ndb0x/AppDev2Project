@@ -32,43 +32,47 @@ namespace AppDev2Project.Controllers
         // Dashboard View
         public async Task<IActionResult> Dashboard()
         {
-            var teacherId = GetCurrentTeacherId();
-            
-            // Get exam statistics
-            ViewBag.TotalExams = await _context.Exams
-                .Where(e => e.TeacherId == teacherId)
-                .CountAsync();
+            try
+            {
+                var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                
+                var exams = await _context.Exams
+                    .Include(e => e.CompletedExams)
+                    .Where(e => e.TeacherId == userId)
+                    .ToListAsync();
 
-            ViewBag.ActiveExams = await _context.Exams
-                .Where(e => e.TeacherId == teacherId && e.State == "Complete")
-                .CountAsync();
+                var recentExams = await _context.Exams
+                    .Where(e => e.TeacherId == userId)
+                    .OrderByDescending(e => e.CreatedAt)
+                    .Take(5)
+                    .ToListAsync();
 
-            ViewBag.TotalQuestions = await _context.Questions
-                .Include(q => q.Exam)
-                .Where(q => q.Exam.TeacherId == teacherId)
-                .CountAsync();
+                ViewBag.TotalExams = exams.Count;
+                ViewBag.ActiveExams = exams.Count(e => e.HasStarted && !e.IsClosed);
+                ViewBag.CompletedExams = exams.Count(e => e.IsClosed);
+                ViewBag.RecentExams = recentExams;  // Set the RecentExams property
+                ViewBag.RecentSubmissions = await _context.CompletedExams
+                    .Include(ce => ce.Exam)
+                    .Include(ce => ce.User)
+                    .Where(ce => ce.Exam.TeacherId == userId)
+                    .OrderByDescending(ce => ce.CompletedAt)
+                    .Take(5)
+                    .ToListAsync();
 
-            // Get recent exams
-            ViewBag.RecentExams = await _context.Exams
-                .Where(e => e.TeacherId == teacherId)
-                .OrderByDescending(e => e.CreatedAt)
-                .Take(5)
-                .Select(e => new
-                {
-                    Id = e.Id,
-                    Title = e.Title,
-                    Subject = e.Subject,
-                    State = e.State,
-                    QuestionsCount = e.Questions.Count
-                })
-                .ToListAsync();
-
-            return View();
+                TempData["Success"] = "Welcome to your teacher dashboard!";
+                return View();
+            }
+            catch (Exception)
+            {
+                TempData["Error"] = "Failed to load dashboard. Please try again.";
+                return RedirectToAction("Index", "Home");
+            }
         }
 
         // Create Exam View
         public IActionResult CreateExam()
         {
+            TempData["Info"] = "Create a new exam by filling out the form below.";
             var exam = new Exam
             {
                 State = "draft",
@@ -91,13 +95,20 @@ namespace AppDev2Project.Controllers
 
                     _context.Exams.Add(exam);
                     await _context.SaveChangesAsync();
+                    TempData["Success"] = "Exam created successfully!";
                     return RedirectToAction(nameof(Dashboard));
                 }
                 catch (UnauthorizedAccessException)
                 {
+                    TempData["Error"] = "You are not authorized to create exams.";
                     return RedirectToAction("Login", "Account");
                 }
+                catch (Exception)
+                {
+                    TempData["Error"] = "Failed to create exam. Please try again.";
+                }
             }
+            TempData["Error"] = "Please check your input and try again.";
             return View(exam);
         }
 
@@ -160,6 +171,63 @@ namespace AppDev2Project.Controllers
             }
 
             return RedirectToAction(nameof(Students));
+        }
+
+        public async Task<IActionResult> CompletedExams()
+        {
+            try
+            {
+                var userId = GetCurrentTeacherId();
+                var completedExams = await _context.CompletedExams
+                    .Include(ce => ce.Exam)
+                    .Include(ce => ce.User)
+                    .Where(ce => ce.Exam.TeacherId == userId)
+                    .OrderByDescending(ce => ce.CompletedAt)
+                    .ToListAsync();
+
+                if (!completedExams.Any())
+                {
+                    TempData["Info"] = "No completed exams found.";
+                }
+                else
+                {
+                    TempData["Success"] = "Viewing all completed exams.";
+                }
+                return View(completedExams);
+            }
+            catch (Exception)
+            {
+                TempData["Error"] = "Failed to load completed exams.";
+                return RedirectToAction(nameof(Dashboard));
+            }
+        }
+
+        public async Task<IActionResult> ReviewSubmission(int examId, int studentId)
+        {
+            try
+            {
+                var submission = await _context.CompletedExams
+                    .Include(ce => ce.Exam)
+                        .ThenInclude(e => e.Questions)
+                    .Include(ce => ce.User)
+                    .FirstOrDefaultAsync(ce => ce.ExamId == examId && ce.UserId == studentId);
+
+                if (submission == null) return NotFound();
+
+                // Get the student's answers
+                var attempts = await _context.QuestionAttempt
+                    .Where(qa => qa.ExamId == examId && qa.UserId == studentId)
+                    .ToListAsync();
+
+                ViewBag.Attempts = attempts;
+                TempData["Info"] = "Reviewing student submission.";
+                return View(submission);
+            }
+            catch (Exception)
+            {
+                TempData["Error"] = "Failed to load submission review.";
+                return RedirectToAction(nameof(CompletedExams));
+            }
         }
     }
 }

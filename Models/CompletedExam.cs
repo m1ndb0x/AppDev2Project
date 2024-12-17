@@ -36,4 +36,6 @@ public partial class CompletedExam
 
     [Required]
     public bool IsCompleted { get; set; }
+
+    public bool IsSubmitted { get; set; }
 }

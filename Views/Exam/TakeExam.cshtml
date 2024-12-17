@@ -1,3 +1,4 @@
+@using AppDev2Project.Models
 @model AppDev2Project.Models.Exam
 @{
     ViewData["Title"] = "Take Exam";
@@ -67,33 +68,48 @@
                         <div class="font-semibold mb-4">@question.QuestionText</div>
                         <input type="hidden" name="Questions[@question.Id].QuestionId" value="@question.Id" />
                         
-                        @if (question.QuestionType == "multiple_choice")
+                        @switch (question.QuestionType)
                         {
-                            <div class="space-y-3">
-                                <div class="flex items-center p-2 hover:bg-gray-100 rounded">
-                                    <input type="radio" name="Questions[@question.Id].Answer" value="A" id="q@(question.Id)_A" required />
-                                    <label for="q@(question.Id)_A" class="ml-2 w-full cursor-pointer">A) @question.ChoiceA</label>
+                            case "multiple_choice":
+                                <div class="space-y-3">
+                                    <div class="flex items-center p-2 hover:bg-gray-100 rounded">
+                                        <input type="radio" name="Questions[@question.Id].Answer" value="A" id="q@(question.Id)_A" required />
+                                        <label for="q@(question.Id)_A" class="ml-2 w-full cursor-pointer">A) @question.ChoiceA</label>
+                                    </div>
+                                    <div class="flex items-center p-2 hover:bg-gray-100 rounded">
+                                        <input type="radio" name="Questions[@question.Id].Answer" value="B" id="q@(question.Id)_B" />
+                                        <label for="q@(question.Id)_B" class="ml-2 w-full cursor-pointer">B) @question.ChoiceB</label>
+                                    </div>
+                                    <div class="flex items-center p-2 hover:bg-gray-100 rounded">
+                                        <input type="radio" name="Questions[@question.Id].Answer" value="C" id="q@(question.Id)_C" />
+                                        <label for="q@(question.Id)_C" class="ml-2 w-full cursor-pointer">C) @question.ChoiceC</label>
+                                    </div>
+                                    <div class="flex items-center p-2 hover:bg-gray-100 rounded">
+                                        <input type="radio" name="Questions[@question.Id].Answer" value="D" id="q@(question.Id)_D" />
+                                        <label for="q@(question.Id)_D" class="ml-2 w-full cursor-pointer">D) @question.ChoiceD</label>
+                                    </div>
                                 </div>
-                                <div class="flex items-center p-2 hover:bg-gray-100 rounded">
-                                    <input type="radio" name="Questions[@question.Id].Answer" value="B" id="q@(question.Id)_B" />
-                                    <label for="q@(question.Id)_B" class="ml-2 w-full cursor-pointer">B) @question.ChoiceB</label>
+                                break;
+
+                            case "true_false":
+                                <div class="space-y-3">
+                                    <div class="flex items-center p-2 hover:bg-gray-100 rounded">
+                                        <input type="radio" name="Questions[@question.Id].Answer" value="true" id="q@(question.Id)_true" required />
+                                        <label for="q@(question.Id)_true" class="ml-2 w-full cursor-pointer">True</label>
+                                    </div>
+                                    <div class="flex items-center p-2 hover:bg-gray-100 rounded">
+                                        <input type="radio" name="Questions[@question.Id].Answer" value="false" id="q@(question.Id)_false" />
+                                        <label for="q@(question.Id)_false" class="ml-2 w-full cursor-pointer">False</label>
+                                    </div>
                                 </div>
-                                <div class="flex items-center p-2 hover:bg-gray-100 rounded">
-                                    <input type="radio" name="Questions[@question.Id].Answer" value="C" id="q@(question.Id)_C" />
-                                    <label for="q@(question.Id)_C" class="ml-2 w-full cursor-pointer">C) @question.ChoiceC</label>
-                                </div>
-                                <div class="flex items-center p-2 hover:bg-gray-100 rounded">
-                                    <input type="radio" name="Questions[@question.Id].Answer" value="D" id="q@(question.Id)_D" />
-                                    <label for="q@(question.Id)_D" class="ml-2 w-full cursor-pointer">D) @question.ChoiceD</label>
-                                </div>
-                            </div>
-                        }
-                        else
-                        {
-                            <textarea name="Questions[@question.Id].Answer" 
-                                      class="w-full p-2 border rounded-md"
-                                      rows="3"
-                                      required></textarea>
+                                break;
+
+                            case "short_answer":
+                                <textarea name="Questions[@question.Id].Answer" 
+                                          class="w-full p-2 border rounded-md"
+                                          rows="3"
+                                          required></textarea>
+                                break;
                         }
                     </div>
                     questionIndex++;
@@ -248,17 +264,22 @@
             
             document.querySelectorAll('.question-panel').forEach((panel, index) => {
                 const questionText = panel.querySelector('.font-semibold').textContent;
-                const answers = panel.querySelectorAll('input[type="radio"], textarea');
+                const questionType = panel.querySelector('input[type="radio"], textarea')?.type === 'radio' ? 
+                    (panel.querySelector('input[value="true"]') ? 'true_false' : 'multiple_choice') : 'short_answer';
                 let selectedAnswer = '';
                 
-                answers.forEach(answer => {
-                    if (answer.type === 'radio' && answer.checked) {
-                        const choiceText = answer.parentElement.querySelector('label').textContent.trim();
-                        selectedAnswer = choiceText;
-                    } else if (answer.type === 'textarea' && answer.value) {
-                        selectedAnswer = answer.value;
+                if (questionType === 'true_false' || questionType === 'multiple_choice') {
+                    const checkedInput = panel.querySelector('input[type="radio"]:checked');
+                    if (checkedInput) {
+                        const label = panel.querySelector(`label[for="${checkedInput.id}"]`);
+                        selectedAnswer = label.textContent.trim();
                     }
-                });
+                } else {
+                    const textarea = panel.querySelector('textarea');
+                    if (textarea) {
+                        selectedAnswer = textarea.value;
+                    }
+                }
 
                 const questionReview = document.createElement('div');
                 questionReview.className = 'border-b py-4';

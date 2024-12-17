@@ -1,14 +1,14 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using AppDev2Project.Models;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using System;
 using System.Threading.Tasks;
 using System.Linq;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Security.Claims;
+using AppDev2Project.Models;
 using AppDev2Project.Models.ViewModels;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System.Text.RegularExpressions;  // Add this at the top with other using statements
 
 namespace AppDev2Project.Controllers
 {
@@ -31,7 +31,7 @@ namespace AppDev2Project.Controllers
             var examsQuery = _context.Exams
                 .Include(e => e.Teacher)
                 .Include(e => e.Questions)
-                .Include(e => e.AssignedStudents)  // Include assigned students
+                .Include(e => e.AssignedStudents)
                 .AsNoTracking();
 
             // Filter based on role
@@ -426,6 +426,27 @@ namespace AppDev2Project.Controllers
             }
         }
 
+        private bool IsAnswerCorrect(Question question, string answer)
+        {
+            switch (question.QuestionType)
+            {
+                case "multiple_choice":
+                    return answer.ToUpper() == question.CorrectAnswer.ToUpper();
+                    
+                case "true_false":
+                    return answer.ToLower() == question.CorrectAnswer.ToLower();
+                    
+                case "short_answer":
+                    // For short answer, we'll do a case-insensitive comparison
+                    // You might want to implement more sophisticated matching logic
+                    return answer.Trim().Equals(question.CorrectAnswer.Trim(), 
+                        StringComparison.InvariantCultureIgnoreCase);
+                    
+                default:
+                    return false;
+            }
+        }
+
         // Submit Exam (POST)
         [HttpPost]
         [Authorize(Roles = "Student")]
@@ -458,8 +479,15 @@ namespace AppDev2Project.Controllers
                 {
                     if (questions.TryGetValue(question.Id, out var answer))
                     {
-                        var isCorrect = answer.Answer == question.CorrectAnswer;
+                        var isCorrect = IsAnswerCorrect(question, answer.Answer);
                         var score = isCorrect ? question.ScoreWeight : 0;
+                        
+                        // For short answer questions, mark as needing manual grading
+                        if (question.QuestionType == "short_answer")
+                        {
+                            score = 0; // Will be graded manually
+                        }
+                        
                         totalScore += score;
 
                         questionAttempts.Add(new QuestionAttempt
@@ -468,7 +496,7 @@ namespace AppDev2Project.Controllers
                             UserId = userId,
                             ExamId = examId,
                             AnswerText = answer.Answer,
-                            IsGraded = true,
+                            IsGraded = question.QuestionType != "short_answer",
                             Grade = score,
                             SubmittedAt = DateTime.Now
                         });
@@ -810,5 +838,137 @@ namespace AppDev2Project.Controllers
 
             return RedirectToAction(nameof(TrackProgress), new { id = examId });
         }
+
+        [Authorize(Roles = "Teacher")]
+        public async Task<IActionResult> ManageSubmissions(int id)
+        {
+            var exam = await _context.Exams
+                .Include(e => e.CompletedExams)
+                    .ThenInclude(ce => ce.User)
+                .Include(e => e.Questions)
+                .Include(e => e.QuestionAttempts)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (exam == null) return NotFound();
+            
+            return View(exam);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Teacher")]
+        public async Task<IActionResult> CloseExam(int id)
+        {
+            var exam = await _context.Exams
+                .Include(e => e.CompletedExams)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (exam == null) return NotFound();
+
+            exam.IsClosed = true;
+            exam.ClosedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            // notify students that the exam is closed
+            foreach (var completion in exam.CompletedExams)
+            {
+            }
+
+            return RedirectToAction(nameof(ManageSubmissions), new { id });
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Teacher")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateGrade([FromBody] UpdateGradeModel model)
+        {
+            try 
+            {
+                var completion = await _context.CompletedExams
+                    .FirstOrDefaultAsync(ce => ce.ExamId == model.ExamId && ce.UserId == model.StudentId);
+
+                if (completion == null) 
+                    return Json(new { success = false, message = "Submission not found" });
+
+                completion.TotalScore = model.NewScore;
+                completion.GradedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                return Json(new { 
+                    success = true, 
+                    message = "Grade updated successfully",
+                    newScore = model.NewScore
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { 
+                    success = false, 
+                    message = "Failed to update grade: " + ex.Message 
+                });
+            }
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Teacher")]
+        public async Task<IActionResult> AddQuestion(int examId)
+        {
+            var exam = await _context.Exams.FindAsync(examId);
+            if (exam == null)
+            {
+                return NotFound();
+            }
+
+            var question = new Question
+            {
+                ExamId = examId,
+                QuestionType = "multiple_choice",
+                ScoreWeight = 1.0,
+                Order = await _context.Questions.CountAsync(q => q.ExamId == examId) + 1
+            };
+
+            return View("Create", question);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Teacher")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddQuestion(Question question)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View("Create", question);
+            }
+
+            try
+            {
+                if (string.IsNullOrEmpty(question.CorrectAnswer) || 
+                    !Regex.IsMatch(question.CorrectAnswer.ToUpper(), "^[A-D]$"))
+                {
+                    ModelState.AddModelError("CorrectAnswer", "Please select a valid answer (A-D)");
+                    return View("Create", question);
+                }
+
+                question.CorrectAnswer = question.CorrectAnswer.ToUpper();
+                question.QuestionType = "multiple_choice"; // Force multiple choice type
+                
+                _context.Questions.Add(question);
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = "Question added successfully!";
+                return RedirectToAction("Edit", "Exam", new { id = question.ExamId });
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Error saving question: " + ex.Message);
+                return View("Create", question);
+            }
+        }
+    }
+
+    public class UpdateGradeModel
+    {
+        public int ExamId { get; set; }
+        public int StudentId { get; set; }
+        public double NewScore { get; set; }
     }
 }

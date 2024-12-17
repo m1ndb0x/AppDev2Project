@@ -4,6 +4,7 @@ using AppDev2Project.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AppDev2Project.Migrations
 {
     [DbContext(typeof(ExaminaDatabaseContext))]
-    partial class ExaminaDatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20241217200646_AddExamIdToQuestionAttemptupdate")]
+    partial class AddExamIdToQuestionAttemptupdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -201,10 +204,6 @@ namespace AppDev2Project.Migrations
                     b.Property<int>("ExamId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Options")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int?>("Order")
                         .HasColumnType("int");
 
@@ -243,9 +242,6 @@ namespace AppDev2Project.Migrations
 
                     b.Property<double?>("Grade")
                         .HasColumnType("float");
-
-                    b.Property<bool>("IsCorrect")
-                        .HasColumnType("bit");
 
                     b.Property<bool>("IsGraded")
                         .ValueGeneratedOnAdd()

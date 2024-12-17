@@ -1,0 +1,118 @@
+@model AppDev2Project.Models.Exam
+@{
+    ViewData["Title"] = "Manage Submissions";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container mx-auto px-4 py-6">
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-teal-700">@Model.Title - Submissions</h1>
+                <p class="text-gray-600">@Model.GetSubmissionCount() submissions</p>
+            </div>
+            <div class="flex space-x-4">
+                @if (!Model.IsClosed)
+                {
+                    <form asp-action="CloseExam" asp-route-id="@Model.Id" method="post">
+                        <button type="submit" class="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700">
+                            Close Exam & Release Grades
+                        </button>
+                    </form>
+                }
+            </div>
+        </div>
+
+        <!-- Statistics Section -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="bg-white p-6 rounded-lg border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Class Average</h3>
+                <p class="text-3xl font-bold text-teal-600">@Model.GetClassAverage().ToString("F1")</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Median Score</h3>
+                <p class="text-3xl font-bold text-teal-600">@Model.GetMedianScore().ToString("F1")</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Completion Rate</h3>
+                <p class="text-3xl font-bold text-teal-600">
+                    @(((double)Model.GetSubmissionCount() / Model.AssignedStudents.Count * 100).ToString("F0"))%
+                </p>
+            </div>
+        </div>
+
+        <!-- Submissions Table -->
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead>
+                    <tr>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Student
+                        </th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Submission Time
+                        </th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Score
+                        </th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach (var submission in Model.CompletedExams.OrderByDescending(ce => ce.CompletedAt))
+                    {
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">@submission.User.Name</div>
+                                <div class="text-sm text-gray-500">@submission.User.Email</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">
+                                    @submission.CompletedAt.ToString("MMM dd, yyyy HH:mm")
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <input type="number" 
+                                       class="w-24 px-2 py-1 border rounded"
+                                       value="@submission.TotalScore"
+                                       onchange="updateGrade(@Model.Id, @submission.UserId, this.value)"
+                                       @(Model.IsClosed ? "disabled" : "") />
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <a href="#" onclick="viewSubmission(@Model.Id, @submission.UserId)" 
+                                   class="text-teal-600 hover:text-teal-900">
+                                    View Details
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        async function updateGrade(examId, studentId, newScore) {
+            try {
+                const response = await fetch('/Exam/UpdateGrade', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        '__RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({ examId, studentId, newScore })
+                });
+                
+                if (!response.ok) throw new Error('Failed to update grade');
+                
+                showNotification('Grade updated successfully', 'success');
+            } catch (error) {
+                showNotification('Failed to update grade', 'error');
+            }
+        }
+    </script>
+}
