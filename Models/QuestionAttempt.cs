@@ -28,13 +28,7 @@ public partial class QuestionAttempt
 
     public DateTime SubmittedAt { get; set; } = DateTime.Now;
 
-    public bool IsCorrect { get; set; }
-
-    // Computed property to determine if answer is correct
-    public bool GetIsCorrect()
-    {
-        return AnswerText == Question?.CorrectAnswer;
-    }
+    public bool IsCorrect { get; set; }  // Add this property
 
     [ForeignKey("QuestionId")]
     [DeleteBehavior(DeleteBehavior.NoAction)]
@@ -47,4 +41,11 @@ public partial class QuestionAttempt
     [ForeignKey("ExamId")]
     [DeleteBehavior(DeleteBehavior.NoAction)]
     public virtual Exam Exam { get; set; } = null!;
+
+    // Helper method
+    public bool GetIsCorrect()
+    {
+        if (Question == null) return false;
+        return IsCorrect;
+    }
 }

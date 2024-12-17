@@ -428,17 +428,19 @@ namespace AppDev2Project.Controllers
 
         private bool IsAnswerCorrect(Question question, string answer)
         {
+            if (string.IsNullOrWhiteSpace(answer))
+                return false;
+
             switch (question.QuestionType)
             {
                 case "multiple_choice":
-                    return answer.ToUpper() == question.CorrectAnswer.ToUpper();
+                    return answer.Trim().ToUpper() == question.CorrectAnswer.Trim().ToUpper();
                     
                 case "true_false":
-                    return answer.ToLower() == question.CorrectAnswer.ToLower();
+                    return answer.Trim().ToLower() == question.CorrectAnswer.Trim().ToLower();
                     
                 case "short_answer":
                     // For short answer, we'll do a case-insensitive comparison
-                    // You might want to implement more sophisticated matching logic
                     return answer.Trim().Equals(question.CorrectAnswer.Trim(), 
                         StringComparison.InvariantCultureIgnoreCase);
                     
@@ -486,6 +488,7 @@ namespace AppDev2Project.Controllers
                         if (question.QuestionType == "short_answer")
                         {
                             score = 0; // Will be graded manually
+                            isCorrect = false; // Needs manual verification
                         }
                         
                         totalScore += score;
@@ -498,7 +501,8 @@ namespace AppDev2Project.Controllers
                             AnswerText = answer.Answer,
                             IsGraded = question.QuestionType != "short_answer",
                             Grade = score,
-                            SubmittedAt = DateTime.Now
+                            SubmittedAt = DateTime.Now,
+                            IsCorrect = isCorrect  // Set the IsCorrect property
                         });
                     }
                 }
@@ -540,7 +544,10 @@ namespace AppDev2Project.Controllers
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             var completedExam = await _context.CompletedExams
                 .Include(ce => ce.Exam)
-                .Include(ce => ce.Exam.Questions)
+                    .ThenInclude(e => e.Questions)
+                .Include(ce => ce.Exam)
+                    .ThenInclude(e => e.QuestionAttempts
+                        .Where(qa => qa.UserId == userId))
                 .Include(ce => ce.User)
                 .FirstOrDefaultAsync(ce => ce.ExamId == id && ce.UserId == userId);
 
@@ -585,13 +592,17 @@ namespace AppDev2Project.Controllers
                         answeredCount = 0;
                     }
 
-                    var timeRemaining = progress.StartedAt.AddMinutes(exam.Duration) - DateTime.UtcNow;
+                    // Calculate time remaining more precisely
+                    var elapsedTime = DateTime.Now - progress.StartedAt;
+                    var timeRemaining = exam.Duration - elapsedTime.TotalMinutes;
                     
                     studentProgress[student.Id] = new StudentProgressInfo
                     {
-                        TimeRemaining = Math.Max(0, timeRemaining.TotalMinutes),
+                        TimeRemaining = Math.Max(0, timeRemaining),
                         LastSaved = progress.LastUpdated.HasValue ? progress.LastUpdated.Value : progress.StartedAt,
-                        CompletedQuestions = answeredCount
+                        CompletedQuestions = answeredCount,
+                        StartedAt = progress.StartedAt,
+                        Duration = exam.Duration
                     };
                 }
                 else
@@ -600,7 +611,9 @@ namespace AppDev2Project.Controllers
                     {
                         TimeRemaining = exam.Duration,
                         LastSaved = DateTime.MinValue,
-                        CompletedQuestions = 0
+                        CompletedQuestions = 0,
+                        StartedAt = DateTime.MinValue,
+                        Duration = exam.Duration
                     };
                 }
             }
@@ -706,6 +719,61 @@ namespace AppDev2Project.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Teacher")]
+        [ValidateAntiForgeryToken] // Add this line if it's missing
+        public async Task<IActionResult> UpdateTime(int examId, int studentId, double newTime)
+        {
+            try
+            {
+                var exam = await _context.Exams
+                    .Include(e => e.StudentProgress)
+                    .FirstOrDefaultAsync(e => e.Id == examId);
+
+                if (exam == null)
+                {
+                    TempData["Error"] = "Exam not found";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                var progress = await _context.ExamProgress
+                    .FirstOrDefaultAsync(ep => ep.ExamId == examId && ep.UserId == studentId);
+
+                if (progress == null)
+                {
+                    // Create new progress if it doesn't exist
+                    progress = new ExamProgress
+                    {
+                        ExamId = examId,
+                        UserId = studentId,
+                        StartedAt = DateTime.Now.AddMinutes(-exam.Duration + newTime),
+                        LastUpdated = DateTime.Now,
+                        SavedAnswers = "{}",
+                        IsCompleted = false,
+                        IsActive = true
+                    };
+                    _context.ExamProgress.Add(progress);
+                }
+                else
+                {
+                    // Update existing progress
+                    progress.StartedAt = DateTime.Now.AddMinutes(-exam.Duration + newTime);
+                    progress.LastUpdated = DateTime.Now;
+                    _context.Entry(progress).State = EntityState.Modified;
+                }
+
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = $"Time updated successfully. Student now has {newTime} minutes remaining.";
+                return RedirectToAction(nameof(TrackProgress), new { id = examId });
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error updating time: {ex.Message}";
+                return RedirectToAction(nameof(TrackProgress), new { id = examId });
+            }
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> KickStudent(int examId, int studentId)
         {
             var exam = await _context.Exams
@@ -731,27 +799,6 @@ namespace AppDev2Project.Controllers
             }
 
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(TrackProgress), new { id = examId });
-        }
-
-        [HttpPost]
-        [Authorize(Roles = "Teacher")]
-        public async Task<IActionResult> UpdateTime(int examId, int studentId, double newTime)
-        {
-            var exam = await _context.Exams.FindAsync(examId);
-            if (exam == null) return NotFound();
-
-            var progress = await _context.ExamProgress
-                .FirstOrDefaultAsync(ep => ep.ExamId == examId && ep.UserId == studentId);
-
-            if (progress == null) return NotFound();
-
-            // Simple calculation: set start time based on how much time we want them to have left
-            progress.StartedAt = DateTime.Now.AddMinutes(-exam.Duration + newTime);
-            
-            await _context.SaveChangesAsync();
-            TempData["Success"] = $"Time updated successfully. Student now has {newTime} minutes remaining.";
-
             return RedirectToAction(nameof(TrackProgress), new { id = examId });
         }
 
