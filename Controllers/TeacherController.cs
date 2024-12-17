@@ -38,8 +38,14 @@ namespace AppDev2Project.Controllers
                 
                 var exams = await _context.Exams
                     .Include(e => e.CompletedExams)
+                    .Include(e => e.Questions)  // Include questions
                     .Where(e => e.TeacherId == userId)
                     .ToListAsync();
+
+                // Calculate active exams correctly by checking HasStarted property
+                var activeExams = await _context.Exams
+                    .Where(e => e.TeacherId == userId && e.HasStarted && !e.IsClosed)
+                    .CountAsync();
 
                 var recentExams = await _context.Exams
                     .Where(e => e.TeacherId == userId)
@@ -48,8 +54,8 @@ namespace AppDev2Project.Controllers
                     .ToListAsync();
 
                 ViewBag.TotalExams = exams.Count;
-                ViewBag.ActiveExams = exams.Count(e => e.HasStarted && !e.IsClosed);
-                ViewBag.CompletedExams = exams.Count(e => e.IsClosed);
+                ViewBag.ActiveExams = activeExams;  // Use the new activeExams count
+                ViewBag.TotalQuestions = exams.Sum(e => e.Questions.Count);  // Calculate total questions
                 ViewBag.RecentExams = recentExams;  // Set the RecentExams property
                 ViewBag.RecentSubmissions = await _context.CompletedExams
                     .Include(ce => ce.Exam)
