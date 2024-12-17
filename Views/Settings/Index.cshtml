@@ -1,6 +1,7 @@
 @model AppDev2Project.Controllers.SettingsViewModel
 @{
     ViewData["Title"] = "User Settings";
+    Layout = "_DashboardLayout";
 }
 
 <h2>User Settings</h2>
@@ -10,33 +11,53 @@
     <div class="alert alert-success">@TempData["SuccessMessage"]</div>
 }
 
-<form asp-action="Index" method="post">
-    <div class="form-group">
-        <label asp-for="Name">Name</label>
-        <input asp-for="Name" class="form-control" />
-        <span asp-validation-for="Name" class="text-danger"></span>
+<form asp-action="Index" method="post" class="max-w-lg mx-auto p-6 bg-white rounded-lg shadow-md space-y-6">
+    <!-- Name Field -->
+    <div>
+        <label asp-for="Name" class="block text-sm font-medium text-gray-700">Name</label>
+        <input asp-for="Name" 
+               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" 
+               placeholder="Enter your name" />
+        <span asp-validation-for="Name" class="text-sm text-red-600"></span>
     </div>
 
-    <hr />
+    <!-- Section Title -->
+    <h4 class="text-lg font-semibold text-gray-800">Change Password</h4>
 
-    <h4>Change Password</h4>
-    <div class="form-group">
-        <label asp-for="CurrentPassword">Current Password</label>
-        <input asp-for="CurrentPassword" class="form-control" />
-        <span asp-validation-for="CurrentPassword" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="NewPassword">New Password</label>
-        <input asp-for="NewPassword" class="form-control" />
-        <span asp-validation-for="NewPassword" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="ConfirmPassword">Confirm New Password</label>
-        <input asp-for="ConfirmPassword" class="form-control" />
-        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+    <!-- Current Password -->
+    <div>
+        <label asp-for="CurrentPassword" class="block text-sm font-medium text-gray-700">Current Password</label>
+        <input asp-for="CurrentPassword" type="password"
+               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+               placeholder="Enter current password" />
+        <span asp-validation-for="CurrentPassword" class="text-sm text-red-600"></span>
     </div>
 
-    <button type="submit" class="btn btn-primary">Save Changes</button>
+    <!-- New Password -->
+    <div>
+        <label asp-for="NewPassword" class="block text-sm font-medium text-gray-700">New Password</label>
+        <input asp-for="NewPassword" type="password"
+               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+               placeholder="Enter new password" />
+        <span asp-validation-for="NewPassword" class="text-sm text-red-600"></span>
+    </div>
+
+    <!-- Confirm Password -->
+    <div>
+        <label asp-for="ConfirmPassword" class="block text-sm font-medium text-gray-700">Confirm New Password</label>
+        <input asp-for="ConfirmPassword" type="password"
+               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+               placeholder="Confirm new password" />
+        <span asp-validation-for="ConfirmPassword" class="text-sm text-red-600"></span>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="flex justify-end">
+        <button type="submit" 
+                class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+            Save Changes
+        </button>
+    </div>
 </form>
 
 @section Scripts {
