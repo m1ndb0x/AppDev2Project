@@ -28,6 +28,14 @@ public partial class QuestionAttempt
 
     public DateTime SubmittedAt { get; set; } = DateTime.Now;
 
+    public bool IsCorrect { get; set; }
+
+    // Computed property to determine if answer is correct
+    public bool GetIsCorrect()
+    {
+        return AnswerText == Question?.CorrectAnswer;
+    }
+
     [ForeignKey("QuestionId")]
     [DeleteBehavior(DeleteBehavior.NoAction)]
     public virtual Question Question { get; set; } = null!;

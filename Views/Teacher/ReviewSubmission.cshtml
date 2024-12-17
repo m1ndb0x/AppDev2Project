@@ -1,0 +1,215 @@
+@using AppDev2Project.Models
+@model AppDev2Project.Models.CompletedExam
+@{
+    ViewData["Title"] = "Review Submission";
+    Layout = "_DashboardLayout";
+    var attempts = ViewBag.Attempts as List<QuestionAttempt>;
+
+    // Calculate completion time with null check
+    var completionTime = Model.Exam.StartedAt.HasValue
+    ? (Model.CompletedAt - Model.Exam.StartedAt.Value).TotalMinutes
+    : 0;
+}
+
+<div class="container mx-auto px-4 py-6">
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <div class="mb-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-teal-700">Review Submission</h1>
+                    <p class="text-gray-600">@Model.User.Name - @Model.Exam.Title</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm text-gray-500">Submitted on</p>
+                    <p class="text-lg font-semibold">@Model.CompletedAt.ToString("MMM dd, yyyy HH:mm")</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Score Summary -->
+        <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                    <p class="text-sm text-gray-500">Total Score</p>
+                    <p class="text-2xl font-bold text-teal-600">@(Model.TotalScore.ToString("0.0"))</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Completion Time</p>
+                    <p class="text-2xl font-bold text-teal-600">
+                        @(completionTime.ToString("F0")) min
+                    </p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Questions Attempted</p>
+                    <p class="text-2xl font-bold text-teal-600">@attempts.Count / @Model.Exam.Questions.Count</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Status</p>
+                    <p class="text-2xl font-bold text-teal-600">@(Model.Exam.IsClosed ? "Graded" : "Pending")</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Question Review -->
+        <div class="space-y-6">
+            @foreach (var question in Model.Exam.Questions.OrderBy(q => q.Order))
+            {
+                var attempt = attempts?.FirstOrDefault(a => a.QuestionId == question.Id);
+                var isCorrect = attempt?.GetIsCorrect() ?? false;
+                <div
+                    class="border rounded-lg p-4 @(isCorrect ? "bg-green-50" : (attempt != null ? "bg-red-50" : "bg-gray-50"))">
+                    <div class="mb-2">
+                        <h3 class="font-semibold text-lg">Question @question.Order</h3>
+                        <p class="text-gray-700">@question.QuestionText</p>
+                    </div>
+
+                    <div class="ml-4 mt-2">
+                        <div class="mb-2">
+                            <span class="text-sm font-medium text-gray-500">Correct Answer:</span>
+                            <span class="ml-2 text-green-600">@question.CorrectAnswer</span>
+                        </div>
+
+                        <div class="mb-2">
+                            <span class="text-sm font-medium text-gray-500">Student's Answer:</span>
+                            <span class="ml-2 @(isCorrect ? "text-green-600" : "text-red-600")">
+                                @(attempt?.AnswerText ?? "Not answered")
+                            </span>
+                        </div>
+
+                        <div>
+                            <span class="text-sm font-medium text-gray-500">Points:</span>
+                            <span class="ml-2">@((attempt?.Grade ?? 0).ToString("0.0")) /
+                                @(question.ScoreWeight.ToString("0.0"))</span>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Actions -->
+        <div class="mt-6 flex justify-end space-x-4">
+            <a href="@Url.Action("ManageSubmissions", "Exam", new { id = Model.ExamId })"
+                class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+                Back to Submissions
+            </a>
+            @if (!Model.Exam.IsClosed)
+            {
+                <button onclick="showModal()" class="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700">
+                    Update Final Grade
+                </button>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Add Modal HTML at the bottom of the container div -->
+<div id="updateGradeModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-medium text-gray-900">Update Final Grade</h3>
+                <button type="button" onclick="closeModal()" class="text-gray-400 hover:text-gray-500">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="mt-4">
+                <label class="block text-sm font-medium text-gray-700">Grade</label>
+                <input type="number" id="gradeInput"
+                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500"
+                    value="@Model.TotalScore" step="0.1">
+            </div>
+            <div class="mt-5 flex justify-end space-x-3">
+                <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
+                    Cancel
+                </button>
+                <button type="button" onclick="submitGrade(@Model.ExamId, @Model.UserId)"
+                    class="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700">
+                    Save Changes
+                </button>
+            </div>
+            @Html.AntiForgeryToken()
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showModal() {
+            document.getElementById('updateGradeModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('updateGradeModal').classList.add('hidden');
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'fixed bottom-4 right-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg';
+            errorDiv.textContent = message;
+            document.body.appendChild(errorDiv);
+            setTimeout(() => errorDiv.remove(), 3000);
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'fixed bottom-4 right-4 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-lg';
+            successDiv.textContent = message;
+            document.body.appendChild(successDiv);
+            setTimeout(() => successDiv.remove(), 3000);
+        }
+
+        async function submitGrade(examId, studentId) {
+            try {
+                event.preventDefault();
+                const gradeInput = document.getElementById('gradeInput');
+                const newScore = parseFloat(gradeInput.value);
+                
+                if (isNaN(newScore)) {
+                    showError('Please enter a valid grade');
+                    gradeInput.focus();
+                    return;
+                }
+
+                const token = document.querySelector('[name=__RequestVerificationToken]');
+                if (!token) {
+                    throw new Error('CSRF token not found');
+                }
+
+                const response = await fetch('/Exam/UpdateGrade', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token.value
+                    },
+                    body: JSON.stringify({
+                        examId,
+                        studentId,
+                        newScore
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.message || 'Failed to update grade');
+                }
+
+                showSuccess(data.message || 'Grade updated successfully');
+                closeModal();
+                setTimeout(() => location.reload(), 1000);
+            } catch (error) {
+                console.error('Error:', error);
+                showError(error.message || 'Failed to update grade. Please try again.');
+            }
+        }
+    </script>
+}
+
+
+
+
+
+
+

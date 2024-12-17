@@ -46,6 +46,31 @@ public partial class Exam
     public virtual ICollection<User> AssignedStudents { get; set; } = new List<User>();
     public virtual ICollection<Question> Questions { get; set; } = new List<Question>();
     public virtual ICollection<CompletedExam> CompletedExams { get; set; } = new List<CompletedExam>();
-    public virtual ICollection<QuestionAttempt> QuestionAttempt { get; set; } = new List<QuestionAttempt>();
+    public virtual ICollection<QuestionAttempt> QuestionAttempts { get; set; } = new List<QuestionAttempt>();
     public string? AssignedStudentIds { get; set; }
+
+    // New properties for status tracking
+    public bool IsSubmitted { get; set; }
+    public bool IsClosed { get; set; }
+    public DateTime? ClosedAt { get; set; }
+
+    // Methods for statistics and analysis
+    public double GetClassAverage()
+    {
+        if (!CompletedExams.Any()) return 0;
+        return CompletedExams.Average(ce => ce.TotalScore);
+    }
+    
+    public double GetMedianScore()
+    {
+        var scores = CompletedExams.Select(ce => ce.TotalScore).OrderBy(s => s).ToList();
+        if (!scores.Any()) return 0;
+        int mid = scores.Count / 2;
+        return scores.Count % 2 != 0 ? scores[mid] : (scores[mid - 1] + scores[mid]) / 2;
+    }
+    
+    public int GetSubmissionCount()
+    {
+        return CompletedExams.Count(ce => ce.IsSubmitted);
+    }
 }
