@@ -15,9 +15,12 @@ namespace AppDev2Project.Models;
 
 public partial class User : IdentityUser<int> // Derive from IdentityUser<int>
 {
-    public string Name { get; set; } = null!;
+    [PersonalData]
+    public string Name { get; set; } = null!;  // This is the display name that can contain spaces
 
-    public string Role { get; set; } = null!; // Ensure role is either 'student' or 'teacher'
+    // [Required]
+    // [StringLength(50)]
+    public string Role { get; set; } = "Student"; // Default role
 
     public DateTime? CreatedAt { get; set; } = DateTime.Now;
 
