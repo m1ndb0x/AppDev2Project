@@ -6,7 +6,8 @@ namespace AppDev2Project.Models.ViewModels
     {
         public string Name { get; set; } = string.Empty;
         public string ProfilePictureUrl { get; set; } = string.Empty;
-        public List<Exam> Exams { get; set; } = new List<Exam>();  // Changed from AvailableExams
+        public List<Exam> Exams { get; set; } = new List<Exam>();
         public List<CompletedExam> CompletedExams { get; set; } = new List<CompletedExam>();
+        public IEnumerable<ExamProgress> ExamProgresses { get; set; }
     }
 }

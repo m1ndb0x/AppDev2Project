@@ -4,6 +4,7 @@ using AppDev2Project.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AppDev2Project.Migrations
 {
     [DbContext(typeof(ExaminaDatabaseContext))]
-    partial class ExaminaDatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20241217183317_OptimizeExamRelationships")]
+    partial class OptimizeExamRelationships
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -222,7 +225,7 @@ namespace AppDev2Project.Migrations
                     b.Property<string>("AnswerText")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("ExamId")
+                    b.Property<int?>("ExamId")
                         .HasColumnType("int");
 
                     b.Property<double?>("Grade")
@@ -558,11 +561,9 @@ namespace AppDev2Project.Migrations
 
             modelBuilder.Entity("AppDev2Project.Models.QuestionAttempt", b =>
                 {
-                    b.HasOne("AppDev2Project.Models.Exam", "Exam")
+                    b.HasOne("AppDev2Project.Models.Exam", null)
                         .WithMany("QuestionAttempt")
-                        .HasForeignKey("ExamId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .HasForeignKey("ExamId");
 
                     b.HasOne("AppDev2Project.Models.Question", "Question")
                         .WithMany("QuestionAttempt")
@@ -575,8 +576,6 @@ namespace AppDev2Project.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Exam");
 
                     b.Navigation("Question");
 

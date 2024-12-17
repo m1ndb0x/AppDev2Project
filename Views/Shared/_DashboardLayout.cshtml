@@ -8,6 +8,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100">
+    <!-- Notifications Container -->
+    <div id="notifications" class="fixed top-4 right-4 z-50 space-y-2">
+        <!-- Notifications will be dynamically inserted here -->
+    </div>
+
     <header>
         <nav class="bg-white shadow-md">
             <!-- Add your navigation items here -->
@@ -41,6 +46,7 @@
                     </div>
                     <div class="px-4 py-2 text-xs text-teal-200 uppercase">Main Menu</div>
                     <nav class="mt-4">
+                        
                         @if (user?.Role == "Student")
                         {
                             <a href="@Url.Action("Dashboard", "Student")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
@@ -98,5 +104,72 @@
     </main>
 
     <script src="~/js/site.js"></script>
+    <script>
+        // Add this to your existing scripts section
+        function showNotification(message, type = 'warning') {
+            const notificationContainer = document.getElementById('notifications');
+            const notification = document.createElement('div');
+            
+            notification.className = `px-4 py-2 rounded-lg shadow-lg transition-all duration-300 transform translate-x-0 ${
+                type === 'warning' ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'
+            }`;
+            
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <span class="mr-2">⚠️</span>
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">×</button>
+                </div>
+            `;
+
+            notificationContainer.appendChild(notification);
+
+            // Remove notification after 10 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 10000);
+        }
+
+        function checkExamTimes() {
+            const examTimers = document.querySelectorAll('[data-exam-end]');
+            
+            examTimers.forEach(timer => {
+                const endTime = new Date(timer.dataset.examEnd).getTime();
+                const currentTime = new Date().getTime();
+                const timeLeft = endTime - currentTime;
+                const minutesLeft = Math.floor(timeLeft / 60000);
+
+                // Don't show multiple notifications for the same time threshold
+                if (!timer.dataset.notifiedFor) {
+                    timer.dataset.notifiedFor = '';
+                }
+
+                const notifications = timer.dataset.notifiedFor.split(',');
+
+                // Check for different time thresholds
+                if (minutesLeft <= 1 && !notifications.includes('1')) {
+                    showNotification('⚠️ 1 minute remaining for exam!', 'warning');
+                    notifications.push('1');
+                } else if (minutesLeft <= 5 && !notifications.includes('5')) {
+                    showNotification('⚠️ 5 minutes remaining for exam!', 'warning');
+                    notifications.push('5');
+                } else if (minutesLeft <= 15 && !notifications.includes('15')) {
+                    showNotification('⚠️ 15 minutes remaining for exam!', 'warning');
+                    notifications.push('15');
+                } else if (minutesLeft <= Math.floor(timer.dataset.examDuration / 2) && !notifications.includes('half')) {
+                    showNotification('📝 Halfway through the exam!', 'info');
+                    notifications.push('half');
+                }
+
+                timer.dataset.notifiedFor = notifications.join(',');
+            });
+        }
+
+        // Check exam times every minute
+        setInterval(checkExamTimes, 60000);
+        
+        // Initial check
+        checkExamTimes();
+    </script>
 </body>
 </html>

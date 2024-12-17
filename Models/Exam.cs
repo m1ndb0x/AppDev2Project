@@ -35,13 +35,13 @@ public partial class Exam
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     
     [Required]
-    public DateTime AvailableFrom { get; set; } = DateTime.Now;
-    
-    public DateTime? AvailableUntil { get; set; }
-
-    [Required]
     [Range(1, 480)]  // 1 minute to 8 hours
     public int Duration { get; set; } = 60;  // Default duration of 60 minutes (1 hour)
+
+    // Add new properties for tracking
+    public bool HasStarted { get; set; } = false;
+    public DateTime? StartedAt { get; set; }
+    public virtual ICollection<ExamProgress> StudentProgress { get; set; } = new List<ExamProgress>();
 
     public virtual ICollection<User> AssignedStudents { get; set; } = new List<User>();
     public virtual ICollection<Question> Questions { get; set; } = new List<Question>();

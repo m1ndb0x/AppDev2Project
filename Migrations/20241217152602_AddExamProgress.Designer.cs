@@ -4,6 +4,7 @@ using AppDev2Project.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AppDev2Project.Migrations
 {
     [DbContext(typeof(ExaminaDatabaseContext))]
-    partial class ExaminaDatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20241217152602_AddExamProgress")]
+    partial class AddExamProgress
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -70,6 +73,12 @@ namespace AppDev2Project.Migrations
                     b.Property<string>("AssignedStudentIds")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("AvailableFrom")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("AvailableUntil")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -79,17 +88,7 @@ namespace AppDev2Project.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Duration")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(60);
-
-                    b.Property<bool>("HasStarted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<DateTime?>("StartedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("int");
 
                     b.Property<string>("State")
                         .IsRequired()
@@ -130,21 +129,15 @@ namespace AppDev2Project.Migrations
                     b.Property<int>("ExamId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
                     b.Property<bool>("IsCompleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("bit");
 
-                    b.Property<DateTime?>("LastUpdated")
+                    b.Property<DateTime>("LastUpdated")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("SavedAnswers")
-                        .HasColumnType("TEXT");
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("StartedAt")
                         .HasColumnType("datetime2");
@@ -154,11 +147,11 @@ namespace AppDev2Project.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ExamId");
+
                     b.HasIndex("UserId");
 
-                    b.HasIndex("ExamId", "UserId", "IsCompleted", "IsActive");
-
-                    b.ToTable("exam_progress", (string)null);
+                    b.ToTable("examProgresses");
                 });
 
             modelBuilder.Entity("AppDev2Project.Models.Question", b =>
@@ -222,7 +215,7 @@ namespace AppDev2Project.Migrations
                     b.Property<string>("AnswerText")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("ExamId")
+                    b.Property<int?>("ExamId")
                         .HasColumnType("int");
 
                     b.Property<double?>("Grade")
@@ -346,6 +339,21 @@ namespace AppDev2Project.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("users", (string)null);
+                });
+
+            modelBuilder.Entity("ExamUser", b =>
+                {
+                    b.Property<int>("AssignedExamsId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("AssignedStudentsId")
+                        .HasColumnType("int");
+
+                    b.HasKey("AssignedExamsId", "AssignedStudentsId");
+
+                    b.HasIndex("AssignedStudentsId");
+
+                    b.ToTable("exam_student_assignments", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
@@ -481,21 +489,6 @@ namespace AppDev2Project.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("exam_student_assignments", b =>
-                {
-                    b.Property<int>("AssignedExamsId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("AssignedStudentsId")
-                        .HasColumnType("int");
-
-                    b.HasKey("AssignedExamsId", "AssignedStudentsId");
-
-                    b.HasIndex("AssignedStudentsId");
-
-                    b.ToTable("exam_student_assignments", (string)null);
-                });
-
             modelBuilder.Entity("AppDev2Project.Models.CompletedExam", b =>
                 {
                     b.HasOne("AppDev2Project.Models.Exam", "Exam")
@@ -529,7 +522,7 @@ namespace AppDev2Project.Migrations
             modelBuilder.Entity("AppDev2Project.Models.ExamProgress", b =>
                 {
                     b.HasOne("AppDev2Project.Models.Exam", "Exam")
-                        .WithMany("StudentProgress")
+                        .WithMany()
                         .HasForeignKey("ExamId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -537,7 +530,7 @@ namespace AppDev2Project.Migrations
                     b.HasOne("AppDev2Project.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Exam");
@@ -558,11 +551,9 @@ namespace AppDev2Project.Migrations
 
             modelBuilder.Entity("AppDev2Project.Models.QuestionAttempt", b =>
                 {
-                    b.HasOne("AppDev2Project.Models.Exam", "Exam")
+                    b.HasOne("AppDev2Project.Models.Exam", null)
                         .WithMany("QuestionAttempt")
-                        .HasForeignKey("ExamId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .HasForeignKey("ExamId");
 
                     b.HasOne("AppDev2Project.Models.Question", "Question")
                         .WithMany("QuestionAttempt")
@@ -576,11 +567,24 @@ namespace AppDev2Project.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Exam");
-
                     b.Navigation("Question");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ExamUser", b =>
+                {
+                    b.HasOne("AppDev2Project.Models.Exam", null)
+                        .WithMany()
+                        .HasForeignKey("AssignedExamsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AppDev2Project.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("AssignedStudentsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
@@ -634,21 +638,6 @@ namespace AppDev2Project.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("exam_student_assignments", b =>
-                {
-                    b.HasOne("AppDev2Project.Models.Exam", null)
-                        .WithMany()
-                        .HasForeignKey("AssignedExamsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AppDev2Project.Models.User", null)
-                        .WithMany()
-                        .HasForeignKey("AssignedStudentsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("AppDev2Project.Models.Exam", b =>
                 {
                     b.Navigation("CompletedExams");
@@ -656,8 +645,6 @@ namespace AppDev2Project.Migrations
                     b.Navigation("QuestionAttempt");
 
                     b.Navigation("Questions");
-
-                    b.Navigation("StudentProgress");
                 });
 
             modelBuilder.Entity("AppDev2Project.Models.Question", b =>

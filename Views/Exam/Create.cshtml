@@ -44,19 +44,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="mb-4">
-                    <label asp-for="AvailableFrom" class="block text-gray-700 text-sm font-bold mb-2">Available From *</label>
-                    <input asp-for="AvailableFrom" type="datetime-local" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" />
-                    <span asp-validation-for="AvailableFrom" class="text-red-500 text-xs"></span>
-                </div>
-
-                <div class="mb-4">
-                    <label asp-for="AvailableUntil" class="block text-gray-700 text-sm font-bold mb-2">Available Until</label>
-                    <input asp-for="AvailableUntil" type="datetime-local" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" />
-                    <span asp-validation-for="AvailableUntil" class="text-red-500 text-xs"></span>
-                </div>
-            </div>
+            <!-- Remove AvailableFrom and AvailableUntil fields -->
 
             <div class="flex justify-between mt-6">
                 <button type="submit" class="bg-teal-500 text-white px-6 py-2 rounded-md hover:bg-teal-600">

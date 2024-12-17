@@ -15,7 +15,11 @@ namespace AppDev2Project.Models
         public DbSet<Question> Questions { get; set; } = null!;
         public DbSet<QuestionAttempt> QuestionAttempt { get; set; } = null!;
         public DbSet<CompletedExam> CompletedExams { get; set; } = null!;
-        // Remove ExamStudents DbSet
+        public DbSet<ExamProgress> ExamProgress { get; set; } = null!;
+
+        // Remove these incorrect properties
+        // public DbSet<ExamProgress> examProgresses { get; internal set; }
+        // public object ExamProgress { get; internal set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -43,8 +47,11 @@ namespace AppDev2Project.Models
                 entity.Property(e => e.State).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.TotalScoreWeight).IsRequired();
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()");
-                entity.Property(e => e.AvailableFrom).IsRequired();
-                entity.Property(e => e.AvailableUntil);
+                entity.Property(e => e.Duration).IsRequired().HasDefaultValue(60);
+                entity.Property(e => e.HasStarted).IsRequired().HasDefaultValue(false);
+                entity.Property(e => e.StartedAt).IsRequired(false);
+
+                // Improve relationships configuration
                 entity.HasOne(e => e.Teacher)
                       .WithMany(u => u.CreatedExams)
                       .HasForeignKey(e => e.TeacherId)
@@ -52,7 +59,18 @@ namespace AppDev2Project.Models
 
                 entity.HasMany(e => e.AssignedStudents)
                     .WithMany(u => u.AssignedExams)
-                    .UsingEntity(j => j.ToTable("exam_student_assignments"));
+                    .UsingEntity<Dictionary<string, object>>(
+                        "exam_student_assignments",
+                        j => j.HasOne<User>().WithMany().HasForeignKey("AssignedStudentsId"),
+                        j => j.HasOne<Exam>().WithMany().HasForeignKey("AssignedExamsId"),
+                        j => j.ToTable("exam_student_assignments")
+                    );
+
+                // Improve ExamProgress relationship
+                entity.HasMany(e => e.StudentProgress)
+                    .WithOne(ep => ep.Exam)
+                    .HasForeignKey(ep => ep.ExamId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<Question>(entity =>
@@ -102,6 +120,30 @@ namespace AppDev2Project.Models
                       .OnDelete(DeleteBehavior.Cascade);
                 entity.HasOne(e => e.User)
                       .WithMany(u => u.CompletedExams)
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<ExamProgress>(entity =>
+            {
+                entity.ToTable("exam_progress");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.SavedAnswers).HasColumnType("TEXT").IsRequired(false);
+                entity.Property(e => e.StartedAt).IsRequired();
+                entity.Property(e => e.LastUpdated).IsRequired(false); // Make LastUpdated nullable
+                entity.Property(e => e.IsCompleted).HasDefaultValue(false);
+                entity.Property(e => e.IsActive).IsRequired().HasDefaultValue(true);
+                
+                // Index for better query performance
+                entity.HasIndex(e => new { e.ExamId, e.UserId, e.IsCompleted, e.IsActive });
+
+                entity.HasOne(e => e.Exam)
+                      .WithMany(e => e.StudentProgress)
+                      .HasForeignKey(e => e.ExamId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                      
+                entity.HasOne(e => e.User)
+                      .WithMany()
                       .HasForeignKey(e => e.UserId)
                       .OnDelete(DeleteBehavior.Restrict);
             });
