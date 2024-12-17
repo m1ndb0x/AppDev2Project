@@ -1,8 +1,8 @@
 2024/12/16 Dimitri
 1. Done since last scrum
-- 
+- teacher dash + styles
 2. Plan until next Scrum
-- 
+- student dash
 3. Need assistance / figure things out
 - 
 
