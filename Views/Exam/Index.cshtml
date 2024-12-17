@@ -51,14 +51,28 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <a href="@Url.Action("Details", "Exam", new { id = exam.Id })" 
-                               class="text-blue-600 hover:text-blue-900 mr-4">Details</a>
                             @if (User.IsInRole("Teacher"))
                             {
+                                <a href="@Url.Action("Details", "Exam", new { id = exam.Id })" 
+                                   class="text-blue-600 hover:text-blue-900 mr-4">Details</a>
                                 <a href="@Url.Action("Edit", "Exam", new { id = exam.Id })" 
                                    class="text-indigo-600 hover:text-indigo-900 mr-4">Edit</a>
                                 <a href="@Url.Action("Delete", "Exam", new { id = exam.Id })" 
                                    class="text-red-600 hover:text-red-900">Delete</a>
+                            }
+                            else
+                            {
+                                @if (exam.State == "Complete")
+                                {
+                                    <a href="@Url.Action("TakeExam", "Exam", new { id = exam.Id })" 
+                                       class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">
+                                        Take Exam
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-gray-500">Not Available</span>
+                                }
                             }
                         </td>
                     </tr>

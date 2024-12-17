@@ -24,7 +24,7 @@
                         @if (User.Identity != null && User.Identity.IsAuthenticated)
                         {
                             <a asp-controller="Teacher" asp-action="Dashboard" class="px-3 py-2 rounded-md text-base font-medium text-teal-600 hover:text-teal-700 hover:bg-teal-50">Teacher Dashboard</a>
-                            <a asp-controller="Student" asp-action="StudentDashboard" class="px-3 py-2 rounded-md text-base font-medium text-teal-600 hover:text-teal-700 hover:bg-teal-50">Student Dashboard</a>
+                            <a asp-controller="Student" asp-action="Dashboard" class="px-3 py-2 rounded-md text-base font-medium text-teal-600 hover:text-teal-700 hover:bg-teal-50">Student Dashboard</a>
                             <a asp-controller="Account" asp-action="Logout" class="px-3 py-2 rounded-md text-base font-medium text-coral-600 hover:text-coral-700 hover:bg-coral-50">Logout</a>
                         }
                         else

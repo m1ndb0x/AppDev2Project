@@ -28,6 +28,11 @@ public partial class Exam
     public int TeacherId { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.Now;
+    
+    [Required]
+    public DateTime AvailableFrom { get; set; } = DateTime.Now;
+    
+    public DateTime? AvailableUntil { get; set; }
 
     public virtual User Teacher { get; set; } = null!;
     public virtual ICollection<Question> Questions { get; set; } = new List<Question>();

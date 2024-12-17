@@ -107,7 +107,7 @@ namespace AppDev2Project.Controllers
                         else if (user.Role == "Student")
                         {
                             // Razor Page path for Student Dashboard
-                            return RedirectToAction("StudentDashboard", "Student");
+                            return RedirectToAction("Dashboard", "Student");
                         }
                         else
                         {

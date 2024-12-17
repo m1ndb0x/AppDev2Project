@@ -42,6 +42,8 @@ namespace AppDev2Project.Models
                 entity.Property(e => e.State).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.TotalScoreWeight).IsRequired();
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()");
+                entity.Property(e => e.AvailableFrom).IsRequired();
+                entity.Property(e => e.AvailableUntil);
                 entity.HasOne(e => e.Teacher)
                       .WithMany(u => u.Exams)
                       .HasForeignKey(e => e.TeacherId)
@@ -87,11 +89,12 @@ namespace AppDev2Project.Models
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.IsCompleted).HasDefaultValue(false);
                 entity.Property(e => e.TotalScore);
-                entity.Property(e => e.GradedAt);
+                entity.Property(e => e.CompletedAt).HasColumnType("datetime2").IsRequired();
+                entity.Property(e => e.GradedAt).HasColumnType("datetime2");
                 entity.HasOne(e => e.Exam)
                       .WithMany(ex => ex.CompletedExams)
                       .HasForeignKey(e => e.ExamId)
-                      .OnDelete(DeleteBehavior.Cascade); // Changed from Restrict to Cascade
+                      .OnDelete(DeleteBehavior.Cascade);
                 entity.HasOne(e => e.User)
                       .WithMany(u => u.CompletedExams)
                       .HasForeignKey(e => e.UserId)

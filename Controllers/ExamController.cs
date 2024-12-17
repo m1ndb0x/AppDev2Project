@@ -6,6 +6,7 @@ using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Security.Claims;
+using AppDev2Project.Models.ViewModels;
 
 namespace AppDev2Project.Controllers
 {
@@ -68,7 +69,7 @@ namespace AppDev2Project.Controllers
         [HttpPost]
         [Authorize(Roles = "Teacher")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([FromForm] Exam exam)  // Change to [FromForm]
+        public async Task<IActionResult> Create([FromForm] Exam exam)
         {
             // Remove TeacherId from ModelState since we'll set it programmatically
             ModelState.Remove("TeacherId");
@@ -83,6 +84,12 @@ namespace AppDev2Project.Controllers
                     exam.TeacherId = int.Parse(userId);
                     exam.State = "Incomplete";
                     exam.CreatedAt = DateTime.Now;
+                    
+                    // Set default availability if not specified
+                    if (exam.AvailableFrom == default)
+                    {
+                        exam.AvailableFrom = DateTime.Now;
+                    }
 
                     _context.Exams.Add(exam);
                     await _context.SaveChangesAsync();
@@ -120,46 +127,22 @@ namespace AppDev2Project.Controllers
         [HttpPost]
         [Authorize(Roles = "Teacher")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,Subject,TotalScoreWeight,State")] Exam exam)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,Subject,TotalScoreWeight,State,TeacherId,CreatedAt")] Exam exam)
         {
             if (id != exam.Id)
             {
                 return NotFound();
             }
 
+            // Remove TeacherId from validation since it's a hidden field
+            ModelState.Remove("Teacher");
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var existingExam = await _context.Exams
-                        .Include(e => e.Questions)
-                        .FirstOrDefaultAsync(e => e.Id == id);
-
-                    if (existingExam == null)
-                    {
-                        return NotFound();
-                    }
-
-                    // Check if user is the teacher who created the exam
-                    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                    if (existingExam.TeacherId != int.Parse(userId))
-                    {
-                        return Forbid();
-                    }
-
-                    // Only allow Complete state if there are questions
-                    if (exam.State == "Complete" && !existingExam.Questions.Any())
-                    {
-                        ModelState.AddModelError("State", "Cannot mark exam as Complete without questions");
-                        return View(existingExam);
-                    }
-
-                    existingExam.Title = exam.Title;
-                    existingExam.Description = exam.Description;
-                    existingExam.Subject = exam.Subject;
-                    existingExam.TotalScoreWeight = exam.TotalScoreWeight;
-                    existingExam.State = exam.State;
-
+                    // Attach and mark entity as modified
+                    _context.Entry(exam).State = EntityState.Modified;
                     await _context.SaveChangesAsync();
                     return RedirectToAction(nameof(Index));
                 }
@@ -175,7 +158,12 @@ namespace AppDev2Project.Controllers
                     }
                 }
             }
-            return View(exam);
+
+            // If we got this far, something failed, redisplay form
+            var reloadedExam = await _context.Exams
+                .Include(e => e.Questions)
+                .FirstOrDefaultAsync(e => e.Id == id);
+            return View(reloadedExam);
         }
 
         private bool ExamExists(int id)
@@ -242,6 +230,128 @@ namespace AppDev2Project.Controllers
                 ModelState.AddModelError("", "Unable to delete exam. Please try again.");
                 return View(exam);
             }
+        }
+
+        // Take Exam (GET)
+        [Authorize(Roles = "Student")]
+        public async Task<IActionResult> TakeExam(int id)
+        {
+            var exam = await _context.Exams
+                .Include(e => e.Teacher)
+                .Include(e => e.Questions)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (exam == null)
+            {
+                return NotFound();
+            }
+
+            // Check if exam is Complete and available
+            if (exam.State != "Complete")
+            {
+                return BadRequest("This exam is not yet available.");
+            }
+
+            // Check if student has already completed this exam
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var alreadyCompleted = await _context.CompletedExams
+                .AnyAsync(ce => ce.ExamId == id && ce.UserId == userId);
+
+            if (alreadyCompleted)
+            {
+                return RedirectToAction("ViewResult", new { id = exam.Id });
+            }
+
+            return View(exam);
+        }
+
+        // Submit Exam (POST)
+        [HttpPost]
+        [Authorize(Roles = "Student")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SubmitExam(int examId, Dictionary<int, QuestionAnswerViewModel> questions)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            // Check if exam exists and is complete
+            var exam = await _context.Exams
+                .Include(e => e.Questions)
+                .FirstOrDefaultAsync(e => e.Id == examId);
+
+            if (exam == null || exam.State != "Complete")
+            {
+                return NotFound();
+            }
+
+            // Check for existing submission
+            var existingSubmission = await _context.CompletedExams
+                .AnyAsync(ce => ce.ExamId == examId && ce.UserId == userId);
+
+            if (existingSubmission)
+            {
+                return BadRequest("You have already submitted this exam.");
+            }
+
+            // Create completed exam record
+            var completedExam = new CompletedExam
+            {
+                ExamId = examId,
+                UserId = userId,
+                CompletedAt = DateTime.Now,
+                GradedAt = DateTime.Now,
+                TotalScore = 0.0 // Will be updated after processing questions
+            };
+
+            _context.CompletedExams.Add(completedExam);
+
+            // Calculate total score
+            double totalScore = 0;
+            foreach (var question in exam.Questions)
+            {
+                if (questions.TryGetValue(question.Id, out var answer))
+                {
+                    var attempt = new QuestionAttempt
+                    {
+                        QuestionId = question.Id,
+                        UserId = userId,
+                        AnswerText = answer.Answer,
+                        IsGraded = true,
+                        Grade = answer.Answer == question.CorrectAnswer ? question.ScoreWeight : 0,
+                        SubmittedAt = DateTime.Now
+                    };
+                    _context.QuestionAttempt.Add(attempt);
+                    
+                    // Add score calculation here
+                    if (answer.Answer == question.CorrectAnswer)
+                    {
+                        totalScore += question.ScoreWeight;
+                    }
+                }
+            }
+
+            completedExam.TotalScore = totalScore;
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("ViewResult", new { id = examId });
+        }
+
+        // View Exam Result
+        [Authorize(Roles = "Student")]
+        public async Task<IActionResult> ViewResult(int id)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var completedExam = await _context.CompletedExams
+                .Include(ce => ce.Exam)
+                .Include(ce => ce.Exam.Questions)
+                .Include(ce => ce.User)
+                .FirstOrDefaultAsync(ce => ce.ExamId == id && ce.UserId == userId);
+
+            if (completedExam == null)
+            {
+                return NotFound();
+            }
+
+            return View(completedExam);
         }
     }
 }
