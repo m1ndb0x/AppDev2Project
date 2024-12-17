@@ -1,16 +1,18 @@
 2024/12/17 Dimitri
 1. Done since last scrum
-- 
+- General design
+- exam creation, assign, grading
+- worked on student dashboard
 2. Plan until next Scrum
-- 
+- clean bugs and finalize styles
 3. Need assistance / figure things out
 - 
 
 2024/12/17 Alexandre
 1. Done since last scrum
-- 
+- Blob integration
 2. Plan until next Scrum
-- 
+- finialize pfp logic
 3. Need assistance / figure things out
 - 
 
