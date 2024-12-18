@@ -1,9 +1,132 @@
 ﻿@model IndexModel
 
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Welcome";
+    Layout = "_DashboardLayout";
 }
-<div class="text-center"> 
-    <h1 class="display-4">Welcome</h1>
-    <p class="mt-4">This is the home page of the Examina web application.</p>
-</div> 
+
+<div class="flex flex-col items-center justify-center">
+    <div class="container mx-auto max-w-4xl px-4">
+        <div class="text-center mb-8">
+            <h1 class="text-5xl font-bold text-teal-600 mb-6">Examina</h1>
+            <p class="text-xl text-gray-600">Streamline your exam management process with our comprehensive solution.</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-6">
+                <div class="flex items-center space-x-3 mb-4">
+                    <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    <h3 class="font-semibold text-gray-800">Create Exams</h3>
+                </div>
+                <p class="text-gray-600">Easily create and manage your exams with our intuitive interface.</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-6">
+                <div class="flex items-center space-x-3 mb-4">
+                    <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <h3 class="font-semibold text-gray-800">Manage Students</h3>
+                </div>
+                <p class="text-gray-600">Keep track of student performance and progress efficiently.</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-6">
+                <div class="flex items-center space-x-3 mb-4">
+                    <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <h3 class="font-semibold text-gray-800">Track Results</h3>
+                </div>
+                <p class="text-gray-600">Generate detailed reports and analyze performance metrics.</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-6">
+                <div class="flex items-center space-x-3 mb-4">
+                    <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h3 class="font-semibold text-gray-800">Grade Exams</h3>
+                </div>
+                <p class="text-gray-600">Efficiently grade and provide feedback on student examinations.</p>
+            </div>
+        </div>
+
+        @* <!-- Stats Section -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 my-16">
+            <div class="text-center">
+                <div class="text-4xl font-bold text-teal-600">500+</div>
+                <div class="text-gray-600 mt-2">Exams Created</div>
+            </div>
+            <div class="text-center">
+                <div class="text-4xl font-bold text-teal-600">1000+</div>
+                <div class="text-gray-600 mt-2">Students</div>
+            </div>
+            <div class="text-center">
+                <div class="text-4xl font-bold text-teal-600">50+</div>
+                <div class="text-gray-600 mt-2">Teachers</div>
+            </div>
+            <div class="text-center">
+                <div class="text-4xl font-bold text-teal-600">95%</div>
+                <div class="text-gray-600 mt-2">Satisfaction</div>
+            </div>
+        </div> *@
+
+        <!-- How it Works Section -->
+        <div class="my-16">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">How It Works</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="bg-teal-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl text-teal-600">1</span>
+                    </div>
+                    <h3 class="font-semibold text-gray-800 mb-2">Create an Exam</h3>
+                    <p class="text-gray-600">Design your exam with our easy-to-use interface</p>
+                </div>
+                <div class="text-center">
+                    <div class="bg-teal-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl text-teal-600">2</span>
+                    </div>
+                    <h3 class="font-semibold text-gray-800 mb-2">Add Students</h3>
+                    <p class="text-gray-600">Invite students to take the exam</p>
+                </div>
+                <div class="text-center">
+                    <div class="bg-teal-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl text-teal-600">3</span>
+                    </div>
+                    <h3 class="font-semibold text-gray-800 mb-2">Grade & Analyze</h3>
+                    <p class="text-gray-600">Review results and generate reports</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature Highlights -->
+        <div class="my-16">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">Why Choose Examina?</h2>
+            <div class="bg-gradient-to-br from-teal-50 to-white rounded-2xl p-8 shadow-lg">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="flex items-start space-x-4">
+                        <svg class="w-8 h-8 text-teal-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        <div>
+                            <h3 class="font-semibold text-gray-800 mb-2">Secure Platform</h3>
+                            <p class="text-gray-600">Your data is protected with industry-standard encryption</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-4">
+                        <svg class="w-8 h-8 text-teal-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        <div>
+                            <h3 class="font-semibold text-gray-800 mb-2">Fast Results</h3>
+                            <p class="text-gray-600">Get instant feedback and analysis on exam performance</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

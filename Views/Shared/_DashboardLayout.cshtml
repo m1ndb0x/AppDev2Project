@@ -27,67 +27,105 @@
         <div class="flex h-full bg-white">
             <!-- Sidebar -->
             <div class="w-64 bg-teal-600 text-white">
-                <div class="sticky top-0 h-screen w-64 bg-teal-600 text-white overflow-y-auto z-50">
-                    <div class="flex items-center p-4 border-b border-teal-500">
-                        <div class="w-10 h-10 rounded-full overflow-hidden">
-                            @{
-                                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                                var user = await UserManager.FindByIdAsync(userId);
+                <div class="sticky top-0 h-screen w-64 bg-teal-600 text-white overflow-y-auto z-50 flex flex-col">
+                    @if (User.Identity != null && User.Identity.IsAuthenticated)
+                    {
+                        <div class="flex items-center p-4 border-b border-teal-500">
+                            <div class="w-10 h-10 rounded-full overflow-hidden">
+                                @{
+                                    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                                    var user = await UserManager.FindByIdAsync(userId);
+                                }
+                                <img src="@user?.ProfilePictureUrl" alt="@user?.Name" class="w-full h-full object-cover" />
+                            </div>
+                            <div class="ml-3">
+                                <p class="font-semibold">@(user?.Name ?? "Unknown")</p>
+                                <p class="text-sm text-gray-400">@user?.Role</p>
+                            </div>
+                        </div>
+                        
+                        <nav class="mt-4">
+                            
+                            @if (user?.Role == "Student")
+                            {
+                                <a href="@Url.Action("Dashboard", "Student")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
+                                    <i class="fas fa-home text-lg mr-4"></i>
+                                    Dashboard
+                                </a>
+                                <a href="@Url.Action("ExamHistory", "Student")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
+                                    <i class="fas fa-history text-lg mr-4"></i>
+                                    Exam History
+                                </a>
+                                <a href="@Url.Action("Index", "Settings")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
+                                    <i class="fas fa-cog text-lg mr-4"></i>
+                                    Settings
+                                </a>
                             }
-                            <img src="@user?.ProfilePictureUrl" alt="@user?.Name" class="w-full h-full object-cover" />
+                            else if (user?.Role == "Teacher")
+                            {
+                                <a href="@Url.Action("Dashboard", "Teacher")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
+                                    <i class="fas fa-home text-lg mr-4"></i>
+                                    Home
+                                </a>
+                                <a href="@Url.Action("Index", "Exam")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
+                                    <i class="fas fa-file-alt text-lg mr-4"></i>
+                                    Exams
+                                </a>
+                                <a href="@Url.Action("Create", "Exam")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
+                                    <i class="fas fa-plus text-lg mr-4"></i>
+                                    Create New Exam
+                                </a>
+                                <a href="@Url.Action("Students", "Teacher")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
+                                    <i class="fas fa-users text-lg mr-4"></i>
+                                    Students
+                                </a>
+                                <a href="@Url.Action("CompletedExams", "Teacher")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
+                                    <i class="fas fa-check-circle text-lg mr-4"></i>
+                                    Completed Exams
+                                </a>
+                                <a href="@Url.Action("Index", "Settings")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
+                                    <i class="fas fa-cog text-lg mr-4"></i>
+                                    Settings
+                                </a>
+                            }
+                        </nav>
+
+                        <!-- Logout Button -->
+                        <div class="mt-auto border-t border-teal-500">
+                            <form asp-controller="Account" asp-action="Logout" method="post">
+                                <button type="submit" class="flex items-center px-4 py-3 text-white hover:bg-teal-700 w-full">
+                                    <i class="fas fa-sign-out-alt text-lg mr-4"></i>
+                                    Logout
+                                </button>
+                            </form>
                         </div>
-                        <div class="ml-3">
-                            <p class="font-semibold">@(user?.Name ?? "Unknown")</p>
-                            <p class="text-sm text-gray-400">@user?.Role</p>
+                    }
+                    else
+                    {
+                        <div class="flex-grow">
+                            <nav class="mt-4">
+                                <a href="@Url.Action("Index", "Home")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
+                                    <i class="fas fa-home text-lg mr-4"></i>
+                                    Home
+                                </a>
+                                <a href="@Url.Action("Login", "Account")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
+                                    <i class="fas fa-sign-in-alt text-lg mr-4"></i>
+                                    Login
+                                </a>
+                                <a href="@Url.Action("Register", "Account")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
+                                    <i class="fas fa-user-plus text-lg mr-4"></i>
+                                    Register
+                                </a>
+                            </nav>
                         </div>
-                    </div>
+                    }
                     
-                    <nav class="mt-4">
-                        
-                        @if (user?.Role == "Student")
-                        {
-                            <a href="@Url.Action("Dashboard", "Student")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
-                                <i class="fas fa-home text-lg mr-4"></i>
-                                Dashboard
-                            </a>
-                            <a href="@Url.Action("ExamHistory", "Student")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
-                                <i class="fas fa-history text-lg mr-4"></i>
-                                Exam History
-                            </a>
-                            <a href="@Url.Action("Index", "Settings")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
-                                <i class="fas fa-cog text-lg mr-4"></i>
-                                Settings
-                            </a>
-                        }
-                        else if (user?.Role == "Teacher")
-                        {
-                            <a href="@Url.Action("Dashboard", "Teacher")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
-                                <i class="fas fa-home text-lg mr-4"></i>
-                                Home
-                            </a>
-                            <a href="@Url.Action("Index", "Exam")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
-                                <i class="fas fa-file-alt text-lg mr-4"></i>
-                                Exams
-                            </a>
-                            <a href="@Url.Action("Create", "Exam")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
-                                <i class="fas fa-plus text-lg mr-4"></i>
-                                Create New Exam
-                            </a>
-                            <a href="@Url.Action("Students", "Teacher")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
-                                <i class="fas fa-users text-lg mr-4"></i>
-                                Students
-                            </a>
-                            <a href="@Url.Action("CompletedExams", "Teacher")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
-                                <i class="fas fa-check-circle text-lg mr-4"></i>
-                                Completed Exams
-                            </a>
-                            <a href="@Url.Action("Index", "Settings")" class="flex items-center px-4 py-3 text-white hover:bg-teal-700">
-                                <i class="fas fa-cog text-lg mr-4"></i>
-                                Settings
-                            </a>
-                        }
-                        
-                    </nav>
+                    <!-- Logo at bottom -->
+                    <div class="border-t border-teal-500">
+                        <a href="@Url.Action("Index", "Home")" class="flex items-center px-4 py-4 text-white hover:bg-teal-700">
+                            <span class="text-4xl font-bold tracking-wide">Examina</span>
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -104,7 +142,7 @@
                     </div>
                 </header>
 
-                <main class="flex-1 p-6 overflow-y-auto">
+                <main class="p-6 overflow-y-auto">
                     @RenderBody()
                 </main>
             </div>
