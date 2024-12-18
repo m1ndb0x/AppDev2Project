@@ -14,9 +14,6 @@
     </div>
 
     <header>
-        <nav class="bg-white shadow-md">
-            <!-- Add your navigation items here -->
-        </nav>
     </header>
 
     <main>
@@ -118,7 +115,6 @@
 
     <script src="~/js/site.js"></script>
     <script>
-        // Add this to your existing scripts section
         function showNotification(message, type = 'warning') {
             const notificationContainer = document.getElementById('notifications');
             const notification = document.createElement('div');
@@ -137,7 +133,7 @@
 
             notificationContainer.appendChild(notification);
 
-            // Remove notification after 10 seconds
+           
             setTimeout(() => {
                 notification.remove();
             }, 10000);
@@ -152,7 +148,7 @@
                 const timeLeft = endTime - currentTime;
                 const minutesLeft = Math.floor(timeLeft / 60000);
 
-                // Don't show multiple notifications for the same time threshold
+                
                 if (!timer.dataset.notifiedFor) {
                     timer.dataset.notifiedFor = '';
                 }
@@ -178,10 +174,8 @@
             });
         }
 
-        // Check exam times every minute
         setInterval(checkExamTimes, 60000);
         
-        // Initial check
         checkExamTimes();
     </script>
 </body>
