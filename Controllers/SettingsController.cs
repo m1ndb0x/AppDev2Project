@@ -27,64 +27,159 @@ namespace AppDev2Project.Controllers
 
             var model = new SettingsViewModel
             {
-                Name = user.Name
+                Name = user.Name,
+                Email = user.Email
             };
 
             return View(model);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Index(SettingsViewModel model)
+        public async Task<IActionResult> UpdateName(string name)
         {
-            if (!ModelState.IsValid) return View(model);
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                TempData["ErrorMessage"] = "Name cannot be empty.";
+                return RedirectToAction(nameof(Index));
+            }
 
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound();
 
-            // Update Name
-            user.Name = model.Name;
-            var updateResult = await _userManager.UpdateAsync(user);
+            user.Name = name;
+            var result = await _userManager.UpdateAsync(user);
 
-            // Update Password
-            if (!string.IsNullOrEmpty(model.NewPassword))
+            TempData["SuccessMessage"] = result.Succeeded ? "Your name has been updated." : "Failed to update your name.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
             {
-                var passwordResult = await _userManager.ChangePasswordAsync(
-                    user, model.CurrentPassword, model.NewPassword
-                );
-
-                if (!passwordResult.Succeeded)
-                {
-                    foreach (var error in passwordResult.Errors)
-                        ModelState.AddModelError(string.Empty, error.Description);
-
-                    return View(model);
-                }
-            }
-
-            if (updateResult.Succeeded)
-            {
-                await _signInManager.RefreshSignInAsync(user);
-                TempData["SuccessMessage"] = "Your settings have been updated successfully!";
+                TempData["ErrorMessage"] = "Email cannot be empty.";
                 return RedirectToAction(nameof(Index));
             }
 
-            ModelState.AddModelError(string.Empty, "Failed to update user settings.");
-            return View(model);
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound();
+
+            user.Email = email;
+            user.UserName = email; // Optional if using email as username
+            var result = await _userManager.UpdateAsync(user);
+
+            TempData["SuccessMessage"] = result.Succeeded ? "Your email has been updated." : "Failed to update your email.";
+            return RedirectToAction(nameof(Index));
         }
-    }
 
-    public class SettingsViewModel
-    {
-        public string Name { get; set; }
-        
-        [DataType(DataType.Password)]
-        public string CurrentPassword { get; set; }
+        [HttpPost]
+        public async Task<IActionResult> UpdatePassword(string currentPassword, string newPassword, string confirmPassword)
+        {
+            if (string.IsNullOrWhiteSpace(currentPassword) || string.IsNullOrWhiteSpace(newPassword))
+            {
+                TempData["ErrorMessage"] = "Password fields cannot be empty.";
+                return RedirectToAction(nameof(Index));
+            }
 
-        [DataType(DataType.Password)]
-        public string NewPassword { get; set; }
+            if (newPassword != confirmPassword)
+            {
+                TempData["ErrorMessage"] = "The new password and confirmation password do not match.";
+                return RedirectToAction(nameof(Index));
+            }
 
-        [DataType(DataType.Password)]
-        [Compare("NewPassword", ErrorMessage = "Passwords do not match.")]
-        public string ConfirmPassword { get; set; }
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound();
+
+            var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+
+            TempData["SuccessMessage"] = result.Succeeded ? "Your password has been updated." : "Failed to update your password.";
+            return RedirectToAction(nameof(Index));
+        }
+
+
+        // [HttpPost]
+        // public async Task<IActionResult> UpdateName(string name)
+        // {
+        //     if (string.IsNullOrWhiteSpace(name))
+        //     {
+        //         TempData["ErrorMessage"] = "Name cannot be empty.";
+        //         return RedirectToAction(nameof(Index));
+        //     }
+
+        //     var user = await _userManager.GetUserAsync(User);
+        //     if (user == null) return NotFound();
+
+        //     user.Name = name;
+        //     var result = await _userManager.UpdateAsync(user);
+
+        //     if (result.Succeeded)
+        //     {
+        //         TempData["SuccessMessage"] = "Your name has been updated.";
+        //     }
+        //     else
+        //     {
+        //         TempData["ErrorMessage"] = "Failed to update your name.";
+        //     }
+
+        //     return RedirectToAction(nameof(Index));
+        // }
+
+        // [HttpPost]
+        // public async Task<IActionResult> UpdateEmail(string email)
+        // {
+        //     if (string.IsNullOrWhiteSpace(email))
+        //     {
+        //         TempData["ErrorMessage"] = "Email cannot be empty.";
+        //         return RedirectToAction(nameof(Index));
+        //     }
+
+        //     var user = await _userManager.GetUserAsync(User);
+        //     if (user == null) return NotFound();
+
+        //     user.Email = email;
+        //     user.UserName = email; // Update UserName if using email as the username.
+        //     var result = await _userManager.UpdateAsync(user);
+
+        //     if (result.Succeeded)
+        //     {
+        //         TempData["SuccessMessage"] = "Your email has been updated.";
+        //     }
+        //     else
+        //     {
+        //         TempData["ErrorMessage"] = "Failed to update your email.";
+        //     }
+
+        //     return RedirectToAction(nameof(Index));
+        // }
+
+        // [HttpPost]
+        // public async Task<IActionResult> UpdatePassword(string currentPassword, string newPassword)
+        // {
+        //     if (string.IsNullOrWhiteSpace(currentPassword) || string.IsNullOrWhiteSpace(newPassword))
+        //     {
+        //         TempData["ErrorMessage"] = "Password fields cannot be empty.";
+        //         return RedirectToAction(nameof(Index));
+        //     }
+
+        //     var user = await _userManager.GetUserAsync(User);
+        //     if (user == null) return NotFound();
+
+        //     var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+
+        //     if (result.Succeeded)
+        //     {
+        //         TempData["SuccessMessage"] = "Your password has been updated.";
+        //     }
+        //     else
+        //     {
+        //         foreach (var error in result.Errors)
+        //         {
+        //             TempData["ErrorMessage"] += error.Description + " ";
+        //         }
+        //     }
+
+        //     return RedirectToAction(nameof(Index));
+        // }
     }
 }

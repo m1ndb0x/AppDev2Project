@@ -1,65 +1,96 @@
-@model AppDev2Project.Controllers.SettingsViewModel
+@model AppDev2Project.Models.SettingsViewModel
 @{
     ViewData["Title"] = "User Settings";
     Layout = "_DashboardLayout";
 }
-
-<h2>User Settings</h2>
 
 @if (TempData["SuccessMessage"] != null)
 {
     <div class="alert alert-success">@TempData["SuccessMessage"]</div>
 }
 
-<form asp-action="Index" method="post" class="max-w-lg mx-auto p-6 bg-white rounded-lg shadow-md space-y-6">
-    <!-- Name Field -->
-    <div>
-        <label asp-for="Name" class="block text-sm font-medium text-gray-700">Name</label>
-        <input asp-for="Name" 
-               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" 
-               placeholder="Enter your name" />
-        <span asp-validation-for="Name" class="text-sm text-red-600"></span>
-    </div>
-
-    <!-- Section Title -->
-    <h4 class="text-lg font-semibold text-gray-800">Change Password</h4>
-
-    <!-- Current Password -->
-    <div>
-        <label asp-for="CurrentPassword" class="block text-sm font-medium text-gray-700">Current Password</label>
-        <input asp-for="CurrentPassword" type="password"
-               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-               placeholder="Enter current password" />
-        <span asp-validation-for="CurrentPassword" class="text-sm text-red-600"></span>
-    </div>
-
-    <!-- New Password -->
-    <div>
-        <label asp-for="NewPassword" class="block text-sm font-medium text-gray-700">New Password</label>
-        <input asp-for="NewPassword" type="password"
-               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-               placeholder="Enter new password" />
-        <span asp-validation-for="NewPassword" class="text-sm text-red-600"></span>
-    </div>
-
-    <!-- Confirm Password -->
-    <div>
-        <label asp-for="ConfirmPassword" class="block text-sm font-medium text-gray-700">Confirm New Password</label>
-        <input asp-for="ConfirmPassword" type="password"
-               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-               placeholder="Confirm new password" />
-        <span asp-validation-for="ConfirmPassword" class="text-sm text-red-600"></span>
-    </div>
-
-    <!-- Submit Button -->
-    <div class="flex justify-end">
+<div class="max-w-lg mx-auto p-8 bg-white rounded-lg shadow-md space-y-8">
+    <!-- Update Name -->
+    <form asp-action="UpdateName" method="post" class="space-y-4">
+        <h4 class="text-xl font-semibold text-teal-600">Update Name</h4>
+        <div>
+            <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+            <input id="name" name="name" type="text" 
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
+                   value="@Model.Name" placeholder="Enter your name" />
+        </div>
         <button type="submit" 
-                class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-            Save Changes
+                class="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-md">
+            Save Name
         </button>
-    </div>
-</form>
+    </form>
 
+    <!-- Update Email -->
+    <form asp-action="UpdateEmail" method="post" class="space-y-4">
+        <h4 class="text-xl font-semibold text-teal-600">Update Email</h4>
+        <div>
+            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+            <input id="email" name="email" type="email" 
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
+                   value="@Model.Email" placeholder="Enter your email" />
+        </div>
+        <button type="submit" 
+                class="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-md">
+            Save Email
+        </button>
+    </form>
+
+    <!-- Update Password -->
+    <form asp-action="UpdatePassword" method="post" class="space-y-4">
+        <h4 class="text-xl font-semibold text-teal-600">Update Password</h4>
+        <div>
+            <label for="currentPassword" class="block text-sm font-medium text-gray-700">Current Password</label>
+            <input id="currentPassword" name="currentPassword" type="password" 
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
+                   placeholder="Enter current password" />
+            <span asp-validation-for="CurrentPassword" class="text-sm text-red-600"></span>
+
+            <label for="newPassword" class="block text-sm font-medium text-gray-700 mt-4">New Password</label>
+            <input id="newPassword" name="newPassword" type="password" 
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
+                   placeholder="Enter new password" />
+            <span asp-validation-for="NewPassword" class="text-sm text-red-600"></span>
+
+            <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mt-4">Confirm New Password</label>
+            <input id="confirmPassword" name="confirmPassword" type="password" 
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
+                   placeholder="Confirm new password" />
+            <span asp-validation-for="ConfirmPassword" class="text-sm text-red-600"></span>
+        </div>
+        <button type="submit" 
+                class="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-md">
+            Save Password
+        </button>
+    </form>
+
+    <!-- Success/Error Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div id="successMessage" class="text-teal-600 font-semibold mt-4">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div id="errorMessage" class="text-red-600 font-semibold mt-4">@TempData["ErrorMessage"]</div>
+    }
+</div>
+
+<script>
+    setTimeout(function () {
+        var successMessage = document.getElementById("successMessage");
+        var errorMessage = document.getElementById("errorMessage");
+        if (successMessage) {
+            successMessage.style.display = "none";
+        }
+        if (errorMessage) {
+            errorMessage.style.display = "none";
+        }
+    }, 5000); // Time in milliseconds (5000 = 5 seconds)
+</script>
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }
