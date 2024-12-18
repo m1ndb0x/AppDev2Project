@@ -1,0 +1,105 @@
+@model IEnumerable<AppDev2Project.Models.CompletedExam>
+@{
+    ViewData["Title"] = "Submitted Exams";
+    Layout = "_DashboardLayout";
+}
+
+<div class="container mx-auto px-4 py-6">
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <div class="mb-6">
+            <h1 class="text-2xl font-bold text-teal-700">Submitted Exams</h1>
+            <p class="text-gray-600">Review and manage submitted exams</p>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead>
+                    <tr>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exam</th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted</th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach (var submission in Model.OrderByDescending(s => s.CompletedAt))
+                    {
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">@submission.Exam.Title</div>
+                                <div class="text-sm text-gray-500">@submission.Exam.Subject</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">@submission.User.Name</div>
+                                <div class="text-sm text-gray-500">@submission.User.Email</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">@submission.CompletedAt.ToString("MMM dd, yyyy")</div>
+                                <div class="text-sm text-gray-500">@submission.CompletedAt.ToString("HH:mm")</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @if (submission.Exam.IsClosed)
+                                {
+                                    <div class="text-sm font-medium text-gray-900">@submission.TotalScore.ToString("F1")</div>
+                                }
+                                else
+                                {
+                                    <input type="number" 
+                                           class="w-20 px-2 py-1 border rounded"
+                                           value="@submission.TotalScore" 
+                                           onchange="updateGrade(@submission.ExamId, @submission.UserId, this.value)" />
+                                }
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @if (submission.Exam.IsClosed)
+                                {
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                        Closed
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                        Pending Review
+                                    </span>
+                                }
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <a href="#" onclick="viewDetails(@submission.ExamId, @submission.UserId)"
+                                   class="text-teal-600 hover:text-teal-900">View Details</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        async function updateGrade(examId, studentId, newScore) {
+            try {
+                const response = await fetch('/Exam/UpdateGrade', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        '__RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({ examId, studentId, newScore })
+                });
+                
+                if (!response.ok) throw new Error('Failed to update grade');
+                showNotification('Grade updated successfully', 'success');
+            } catch (error) {
+                showNotification('Failed to update grade', 'error');
+            }
+        }
+
+        function viewDetails(examId, studentId) {
+            window.location.href = `/Teacher/ReviewSubmission?examId=${examId}&studentId=${studentId}`;
+        }
+    </script>
+}

@@ -33,6 +33,11 @@ public partial class User : IdentityUser<int> // Derive from IdentityUser<int>
 
     public string ProfilePictureUrl { get; set; } = string.Empty;
 
+    public DateTime? LastActivity { get; set; }
+
+    public bool IsCurrentlyActive => LastActivity.HasValue && 
+        (DateTime.UtcNow - LastActivity.Value).TotalMinutes <= 5;
+
     // Property to get user's initials
     public string Initials
     {

@@ -1,67 +1,394 @@
+@using AppDev2Project.Models
 @model AppDev2Project.Models.Exam
 @{
     ViewData["Title"] = "Take Exam";
     Layout = "_DashboardLayout";
+    var questionsCount = Model.Questions.Count();
+    var progress = ViewData["ExamProgress"] as ExamProgress;
+    var startTime = progress?.StartedAt ?? DateTime.Now;
+    var savedAnswers = progress?.SavedAnswers ?? "{}";
+    
+    // Add debug logging
+    System.Diagnostics.Debug.WriteLine($"Exam duration from model: {Model.Duration} minutes");
+    
+    // Add timezone debug logging
+    System.Diagnostics.Debug.WriteLine($"Server time: {DateTime.Now}");
+    System.Diagnostics.Debug.WriteLine($"Server UTC time: {DateTime.UtcNow}");
 }
 
 <div class="container mx-auto px-4 py-8">
     <div class="bg-white shadow-md rounded-lg overflow-hidden p-6">
-        <h1 class="text-3xl font-bold mb-4">@Model.Title</h1>
-        <div class="mb-6">
-            <p class="text-gray-600">@Model.Description</p>
-            <div class="mt-4">
-                <span class="font-bold">Subject:</span> @Model.Subject
-                <span class="ml-4 font-bold">Total Score:</span> @Model.TotalScoreWeight
+        <!-- Timer and Header -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold">@Model.Title</h1>
+            <div id="timer" 
+                 class="text-2xl font-bold text-red-600"
+                 data-exam-end="@startTime.AddMinutes(Model.Duration).ToString("o")"
+                 data-exam-duration="@Model.Duration">
+                <span id="hours">00</span>:<span id="minutes">00</span>:<span id="seconds">00</span>
             </div>
         </div>
 
-        <form asp-action="SubmitExam" method="post">
+        <!-- Question Navigation -->
+        <div class="mb-6 flex flex-wrap gap-2">
+            @for (int i = 0; i < questionsCount; i++)
+            {
+                <button onclick="showQuestion(@i)" 
+                        id="nav-@i" 
+                        class="question-nav w-10 h-10 rounded-full border text-center 
+                               hover:bg-blue-100 transition-colors">
+                    @(i + 1)
+                </button>
+            }
+        </div>
+
+        <form id="examForm" asp-action="SubmitExam" method="post">
+            @Html.AntiForgeryToken()
             <input type="hidden" name="ExamId" value="@Model.Id" />
             
-            @foreach (var question in Model.Questions.OrderBy(q => q.Order))
-            {
-                <div class="mb-6 p-4 bg-gray-50 rounded-lg">
-                    <div class="font-semibold mb-2">@question.QuestionText</div>
-                    <input type="hidden" name="Questions[@question.Id].QuestionId" value="@question.Id" />
-                    
-                    @if (question.QuestionType == "multiple_choice")
-                    {
-                        <div class="space-y-2">
-                            <div>
-                                <input type="radio" name="Questions[@question.Id].Answer" value="A" id="q@(question.Id)_A" required />
-                                <label for="q@(question.Id)_A">@question.ChoiceA</label>
-                            </div>
-                            <div>
-                                <input type="radio" name="Questions[@question.Id].Answer" value="B" id="q@(question.Id)_B" />
-                                <label for="q@(question.Id)_B">@question.ChoiceB</label>
-                            </div>
-                            <div>
-                                <input type="radio" name="Questions[@question.Id].Answer" value="C" id="q@(question.Id)_C" />
-                                <label for="q@(question.Id)_C">@question.ChoiceC</label>
-                            </div>
-                            <div>
-                                <input type="radio" name="Questions[@question.Id].Answer" value="D" id="q@(question.Id)_D" />
-                                <label for="q@(question.Id)_D">@question.ChoiceD</label>
-                            </div>
+            <!-- Questions Container -->
+            <div id="questionsContainer">
+                @if (!Model.Questions.Any())
+                {
+                    <div class="bg-red-100 p-4 rounded">
+                        <p class="text-red-600">No questions found for this exam!</p>
+                    </div>
+                }
+                
+                @{var questionIndex = 0;}
+                @foreach (var question in Model.Questions)
+                {
+                    <div class="question-panel mb-6 p-4 bg-gray-50 rounded-lg @(questionIndex == 0 ? "" : "hidden")" 
+                         data-question-index="@questionIndex">
+                        <div class="flex justify-between mb-4">
+                            <span class="font-bold">Question @(questionIndex + 1) of @Model.Questions.Count()</span>
+                            <span class="font-bold">Score: @question.ScoreWeight points</span>
                         </div>
-                    }
-                    else
-                    {
-                        <textarea name="Questions[@question.Id].Answer" 
-                                  class="w-full p-2 border rounded-md"
-                                  rows="3"
-                                  required></textarea>
-                    }
-                </div>
-            }
+                        
+                        <div class="font-semibold mb-4">@question.QuestionText</div>
+                        <input type="hidden" name="Questions[@question.Id].QuestionId" value="@question.Id" />
+                        
+                        @switch (question.QuestionType)
+                        {
+                            case "multiple_choice":
+                                <div class="space-y-3">
+                                    <div class="flex items-center p-2 hover:bg-gray-100 rounded">
+                                        <input type="radio" name="Questions[@question.Id].Answer" value="A" id="q@(question.Id)_A" required />
+                                        <label for="q@(question.Id)_A" class="ml-2 w-full cursor-pointer">A) @question.ChoiceA</label>
+                                    </div>
+                                    <div class="flex items-center p-2 hover:bg-gray-100 rounded">
+                                        <input type="radio" name="Questions[@question.Id].Answer" value="B" id="q@(question.Id)_B" />
+                                        <label for="q@(question.Id)_B" class="ml-2 w-full cursor-pointer">B) @question.ChoiceB</label>
+                                    </div>
+                                    <div class="flex items-center p-2 hover:bg-gray-100 rounded">
+                                        <input type="radio" name="Questions[@question.Id].Answer" value="C" id="q@(question.Id)_C" />
+                                        <label for="q@(question.Id)_C" class="ml-2 w-full cursor-pointer">C) @question.ChoiceC</label>
+                                    </div>
+                                    <div class="flex items-center p-2 hover:bg-gray-100 rounded">
+                                        <input type="radio" name="Questions[@question.Id].Answer" value="D" id="q@(question.Id)_D" />
+                                        <label for="q@(question.Id)_D" class="ml-2 w-full cursor-pointer">D) @question.ChoiceD</label>
+                                    </div>
+                                </div>
+                                break;
 
+                            case "true_false":
+                                <div class="space-y-3">
+                                    <div class="flex items-center p-2 hover:bg-gray-100 rounded">
+                                        <input type="radio" name="Questions[@question.Id].Answer" value="true" id="q@(question.Id)_true" required />
+                                        <label for="q@(question.Id)_true" class="ml-2 w-full cursor-pointer">True</label>
+                                    </div>
+                                    <div class="flex items-center p-2 hover:bg-gray-100 rounded">
+                                        <input type="radio" name="Questions[@question.Id].Answer" value="false" id="q@(question.Id)_false" />
+                                        <label for="q@(question.Id)_false" class="ml-2 w-full cursor-pointer">False</label>
+                                    </div>
+                                </div>
+                                break;
+
+                            case "short_answer":
+                                <textarea name="Questions[@question.Id].Answer" 
+                                          class="w-full p-2 border rounded-md"
+                                          rows="3"
+                                          required></textarea>
+                                break;
+                        }
+                    </div>
+                    questionIndex++;
+                }
+            </div>
+
+            <!-- Navigation Buttons -->
             <div class="flex justify-between items-center mt-6">
-                <button type="submit" 
-                        class="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600">
-                    Submit Exam
+                <div>
+                    <button type="button" 
+                            onclick="previousQuestion()" 
+                            id="prevBtn" 
+                            class="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 hidden">
+                        Previous
+                    </button>
+                    
+                    <button type="button" 
+                            onclick="nextQuestion()" 
+                            id="nextBtn" 
+                            class="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600">
+                        Next
+                    </button>
+                </div>
+                
+                <button type="button" 
+                        onclick="reviewExam()" 
+                        id="reviewBtn" 
+                        class="bg-yellow-500 text-white px-6 py-2 rounded-md hover:bg-yellow-600">
+                    Review Exam
                 </button>
-                <a href="@Url.Action("Index")" class="text-gray-600 hover:text-gray-800">Cancel</a>
             </div>
         </form>
     </div>
 </div>
+
+<!-- Move modals outside container but keep in body -->
+<div id="reviewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-4/5 shadow-lg rounded-md bg-white">
+        <div class="flex flex-col max-h-[80vh]">
+            <div class="flex justify-between items-center pb-3">
+                <h3 class="text-xl font-bold">Review Your Answers</h3>
+                <button onclick="closeReviewModal()" class="text-black hover:text-gray-700">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="overflow-y-auto px-4" id="reviewContent">
+                <!-- Review content will be dynamically populated -->
+            </div>
+            <div class="flex justify-end gap-4 mt-4">
+                <button onclick="submitExam()" 
+                        class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                    Submit Exam
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="submitModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+            <h3 class="text-lg font-medium text-gray-900">Submit Exam</h3>
+            <div class="mt-2 px-7 py-3">
+                <p class="text-gray-700">Are you sure you want to submit this exam? This action cannot be undone.</p>
+            </div>
+            <div class="flex justify-center gap-4 mt-3">
+                <button onclick="closeSubmitModal()"
+                        class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+                    Cancel
+                </button>
+                <button onclick="document.getElementById('examForm').submit()"
+                        class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                    Submit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Single declaration of exam variables
+        const examDurationMinutes = @Model.Duration;
+        const examStartTime = new Date('@startTime.ToString("o")');
+        const totalQuestions = @questionsCount;
+        let currentQuestion = 0;
+        
+        // Timer function
+        function updateTimer() {
+            const now = new Date();
+            const timeLeft = examStartTime.getTime() + (examDurationMinutes * 60 * 1000) - now.getTime();
+            
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                autoSubmitExam();
+                return;
+            }
+
+            const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+            
+            document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+            document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+            document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+        }
+
+        // Navigation functions
+        function updateNavigationButtons() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const reviewBtn = document.getElementById('reviewBtn');
+
+            prevBtn.classList.toggle('hidden', currentQuestion === 0);
+            nextBtn.classList.toggle('hidden', currentQuestion === totalQuestions - 1);
+        }
+
+        function showQuestion(index) {
+            if (index >= 0 && index < totalQuestions) {
+                document.querySelectorAll('.question-panel').forEach(panel => {
+                    panel.classList.add('hidden');
+                });
+                document.querySelector(`[data-question-index="${index}"]`).classList.remove('hidden');
+                currentQuestion = index;
+                updateNavigationButtons();
+                
+                // Update question navigation buttons
+                document.querySelectorAll('.question-nav').forEach((btn, idx) => {
+                    btn.classList.toggle('bg-blue-100', idx === index);
+                });
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestion < totalQuestions - 1) {
+                showQuestion(currentQuestion + 1);
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestion > 0) {
+                showQuestion(currentQuestion - 1);
+            }
+        }
+
+        // Review functionality
+        function reviewExam() {
+            const reviewContent = document.getElementById('reviewContent');
+            reviewContent.innerHTML = '';
+            
+            document.querySelectorAll('.question-panel').forEach((panel, index) => {
+                const questionText = panel.querySelector('.font-semibold').textContent;
+                const questionType = panel.querySelector('input[type="radio"], textarea')?.type === 'radio' ? 
+                    (panel.querySelector('input[value="true"]') ? 'true_false' : 'multiple_choice') : 'short_answer';
+                let selectedAnswer = '';
+                
+                if (questionType === 'true_false' || questionType === 'multiple_choice') {
+                    const checkedInput = panel.querySelector('input[type="radio"]:checked');
+                    if (checkedInput) {
+                        const label = panel.querySelector(`label[for="${checkedInput.id}"]`);
+                        selectedAnswer = label.textContent.trim();
+                    }
+                } else {
+                    const textarea = panel.querySelector('textarea');
+                    if (textarea) {
+                        selectedAnswer = textarea.value;
+                    }
+                }
+
+                const questionReview = document.createElement('div');
+                questionReview.className = 'border-b py-4';
+                questionReview.innerHTML = `
+                    <div class="flex justify-between">
+                        <span class="font-bold">Question ${index + 1}</span>
+                        <button onclick="showQuestion(${index}); closeReviewModal()" 
+                                class="text-blue-500 hover:text-blue-700">
+                            Edit
+                        </button>
+                    </div>
+                    <p class="mt-2">${questionText}</p>
+                    <p class="mt-2 ${selectedAnswer ? 'text-green-600' : 'text-red-600 font-semibold'}">
+                        ${selectedAnswer || 'No answer provided ⚠️'}
+                    </p>
+                `;
+                reviewContent.appendChild(questionReview);
+            });
+
+            document.getElementById('reviewModal').classList.remove('hidden');
+        }
+
+        // Modal functions
+        function closeReviewModal() {
+            document.getElementById('reviewModal').classList.add('hidden');
+        }
+
+        function submitExam() {
+            closeReviewModal();
+            document.getElementById('submitModal').classList.remove('hidden');
+        }
+
+        function closeSubmitModal() {
+            document.getElementById('submitModal').classList.add('hidden');
+        }
+
+        // Auto-save functionality
+        function autoSaveAnswers() {
+            const answers = {};
+            document.querySelectorAll('input[type="radio"]:checked, textarea').forEach(input => {
+                const questionId = input.name.match(/\d+/)[0];
+                answers[questionId] = input.value;
+            });
+
+            fetch('/Exam/SaveProgress', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: JSON.stringify({
+                    examId: @Model.Id,
+                    answers: JSON.stringify(answers)
+                })
+            });
+        }
+
+        function restoreSavedAnswers() {
+            const savedAnswers = JSON.parse('@Html.Raw(savedAnswers)');
+            for (const [questionId, answer] of Object.entries(savedAnswers)) {
+                const input = document.querySelector(`input[name="Questions[${questionId}].Answer"][value="${answer}"]`);
+                const textarea = document.querySelector(`textarea[name="Questions[${questionId}].Answer"]`);
+                if (input) input.checked = true;
+                if (textarea) textarea.value = answer;
+            }
+        }
+
+        function autoSubmitExam() {
+            // Save answers one last time
+            autoSaveAnswers();
+            
+            // Show a notification
+            alert('Time is up! Your exam is being submitted.');
+            
+            // Submit the form
+            document.getElementById('examForm').submit();
+        }
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize timer
+            updateTimer();
+            setInterval(updateTimer, 1000);
+
+            // Initialize exam state
+            restoreSavedAnswers();
+            showQuestion(0);
+            updateNavigationButtons();
+
+            // Setup auto-save
+            setInterval(autoSaveAnswers, 30000);
+
+            // Initialize event listeners
+            setupListeners();
+        });
+
+        function setupListeners() {
+            // Add event listeners for inputs
+            document.querySelectorAll('input[type="radio"], textarea').forEach(input => {
+                input.addEventListener('change', () => {
+                    autoSaveAnswers();
+                    updateProgress();
+                });
+            });
+
+            // Form submission confirmation
+            document.getElementById('examForm').onsubmit = function(e) {
+                return confirm('Are you sure you want to submit the exam?');
+            };
+        }
+    </script>
+}

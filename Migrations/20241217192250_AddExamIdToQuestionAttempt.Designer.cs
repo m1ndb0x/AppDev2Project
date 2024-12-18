@@ -4,6 +4,7 @@ using AppDev2Project.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AppDev2Project.Migrations
 {
     [DbContext(typeof(ExaminaDatabaseContext))]
-    partial class ExaminaDatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20241217192250_AddExamIdToQuestionAttempt")]
+    partial class AddExamIdToQuestionAttempt
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -44,9 +47,6 @@ namespace AppDev2Project.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<bool>("IsSubmitted")
-                        .HasColumnType("bit");
-
                     b.Property<double>("TotalScore")
                         .HasColumnType("float");
 
@@ -73,9 +73,6 @@ namespace AppDev2Project.Migrations
                     b.Property<string>("AssignedStudentIds")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("ClosedAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -93,12 +90,6 @@ namespace AppDev2Project.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
-
-                    b.Property<bool>("IsClosed")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsSubmitted")
-                        .HasColumnType("bit");
 
                     b.Property<DateTime?>("StartedAt")
                         .HasColumnType("datetime2");
@@ -240,9 +231,6 @@ namespace AppDev2Project.Migrations
                     b.Property<double?>("Grade")
                         .HasColumnType("float");
 
-                    b.Property<bool>("IsCorrect")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IsGraded")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -297,9 +285,6 @@ namespace AppDev2Project.Migrations
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
-
-                    b.Property<DateTime?>("LastActivity")
-                        .HasColumnType("datetime2");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
@@ -577,7 +562,7 @@ namespace AppDev2Project.Migrations
             modelBuilder.Entity("AppDev2Project.Models.QuestionAttempt", b =>
                 {
                     b.HasOne("AppDev2Project.Models.Exam", "Exam")
-                        .WithMany("QuestionAttempts")
+                        .WithMany("QuestionAttempt")
                         .HasForeignKey("ExamId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
@@ -671,7 +656,7 @@ namespace AppDev2Project.Migrations
                 {
                     b.Navigation("CompletedExams");
 
-                    b.Navigation("QuestionAttempts");
+                    b.Navigation("QuestionAttempt");
 
                     b.Navigation("Questions");
 

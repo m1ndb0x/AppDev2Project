@@ -1,15 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace AppDev2Project.Models;
 
 public partial class QuestionAttempt
 {
+    [Key]
     public int Id { get; set; }
 
+    [Required]
     public int QuestionId { get; set; }
 
+    [Required]
     public int UserId { get; set; }
+
+    [Required]
+    public int ExamId { get; set; }
 
     public string? AnswerText { get; set; }
 
@@ -19,7 +28,24 @@ public partial class QuestionAttempt
 
     public DateTime SubmittedAt { get; set; } = DateTime.Now;
 
+    public bool IsCorrect { get; set; }  // Add this property
+
+    [ForeignKey("QuestionId")]
+    [DeleteBehavior(DeleteBehavior.NoAction)]
     public virtual Question Question { get; set; } = null!;
 
+    [ForeignKey("UserId")]
+    [DeleteBehavior(DeleteBehavior.NoAction)]
     public virtual User User { get; set; } = null!;
+
+    [ForeignKey("ExamId")]
+    [DeleteBehavior(DeleteBehavior.NoAction)]
+    public virtual Exam Exam { get; set; } = null!;
+
+    // Helper method
+    public bool GetIsCorrect()
+    {
+        if (Question == null) return false;
+        return IsCorrect;
+    }
 }
