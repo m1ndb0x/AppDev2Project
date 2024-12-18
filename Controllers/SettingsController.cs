@@ -35,151 +35,119 @@ namespace AppDev2Project.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateName(string name)
         {
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                TempData["ErrorMessage"] = "Name cannot be empty.";
-                return RedirectToAction(nameof(Index));
-            }
-
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound();
+
+            if (string.IsNullOrEmpty(name))
+            {
+                TempData["ErrorMessage"] = "Name is required.";
+                return RedirectToAction(nameof(Index));
+            }
 
             user.Name = name;
             var result = await _userManager.UpdateAsync(user);
-
-            TempData["SuccessMessage"] = result.Succeeded ? "Your name has been updated." : "Failed to update your name.";
+            if (result.Succeeded)
+            {
+                TempData["SuccessMessage"] = "Name updated successfully.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to update name.";
+            }
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateEmail(string email)
         {
-            if (string.IsNullOrWhiteSpace(email))
-            {
-                TempData["ErrorMessage"] = "Email cannot be empty.";
-                return RedirectToAction(nameof(Index));
-            }
-
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound();
 
-            user.Email = email;
-            user.UserName = email; // Optional if using email as username
-            var result = await _userManager.UpdateAsync(user);
+            if (string.IsNullOrEmpty(email))
+            {
+                TempData["ErrorMessage"] = "Email is required.";
+                return RedirectToAction(nameof(Index));
+            }
 
-            TempData["SuccessMessage"] = result.Succeeded ? "Your email has been updated." : "Failed to update your email.";
+            var emailExists = await _userManager.FindByEmailAsync(email);
+            if (emailExists != null && emailExists.Id != user.Id)
+            {
+                TempData["ErrorMessage"] = "This email is already in use.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var token = await _userManager.GenerateChangeEmailTokenAsync(user, email);
+            var result = await _userManager.ChangeEmailAsync(user, email, token);
+            if (result.Succeeded)
+            {
+                await _userManager.SetUserNameAsync(user, email);
+                TempData["SuccessMessage"] = "Email updated successfully.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to update email.";
+            }
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdatePassword(string currentPassword, string newPassword, string confirmPassword)
         {
-            if (string.IsNullOrWhiteSpace(currentPassword) || string.IsNullOrWhiteSpace(newPassword))
-            {
-                TempData["ErrorMessage"] = "Password fields cannot be empty.";
-                return RedirectToAction(nameof(Index));
-            }
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound();
 
             if (newPassword != confirmPassword)
             {
-                TempData["ErrorMessage"] = "The new password and confirmation password do not match.";
+                TempData["ErrorMessage"] = "New password and confirmation password do not match.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+            if (result.Succeeded)
+            {
+                await _signInManager.RefreshSignInAsync(user);
+                TempData["SuccessMessage"] = "Password updated successfully.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to update password. Please check your current password.";
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteAccount(string password)
+        {
+            if (string.IsNullOrEmpty(password))
+            {
+                TempData["ErrorMessage"] = "Password is required to delete your account.";
                 return RedirectToAction(nameof(Index));
             }
 
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound();
 
-            var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+            if (!await _userManager.CheckPasswordAsync(user, password))
+            {
+                TempData["ErrorMessage"] = "Incorrect password.";
+                return RedirectToAction(nameof(Index));
+            }
 
-            TempData["SuccessMessage"] = result.Succeeded ? "Your password has been updated." : "Failed to update your password.";
-            return RedirectToAction(nameof(Index));
+            var result = await _userManager.DeleteAsync(user);
+            if (!result.Succeeded)
+            {
+                TempData["ErrorMessage"] = "Failed to delete account. Please try again.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            await _signInManager.SignOutAsync();
+            return RedirectToAction("Index", "Home");
         }
-
-
-        // [HttpPost]
-        // public async Task<IActionResult> UpdateName(string name)
-        // {
-        //     if (string.IsNullOrWhiteSpace(name))
-        //     {
-        //         TempData["ErrorMessage"] = "Name cannot be empty.";
-        //         return RedirectToAction(nameof(Index));
-        //     }
-
-        //     var user = await _userManager.GetUserAsync(User);
-        //     if (user == null) return NotFound();
-
-        //     user.Name = name;
-        //     var result = await _userManager.UpdateAsync(user);
-
-        //     if (result.Succeeded)
-        //     {
-        //         TempData["SuccessMessage"] = "Your name has been updated.";
-        //     }
-        //     else
-        //     {
-        //         TempData["ErrorMessage"] = "Failed to update your name.";
-        //     }
-
-        //     return RedirectToAction(nameof(Index));
-        // }
-
-        // [HttpPost]
-        // public async Task<IActionResult> UpdateEmail(string email)
-        // {
-        //     if (string.IsNullOrWhiteSpace(email))
-        //     {
-        //         TempData["ErrorMessage"] = "Email cannot be empty.";
-        //         return RedirectToAction(nameof(Index));
-        //     }
-
-        //     var user = await _userManager.GetUserAsync(User);
-        //     if (user == null) return NotFound();
-
-        //     user.Email = email;
-        //     user.UserName = email; // Update UserName if using email as the username.
-        //     var result = await _userManager.UpdateAsync(user);
-
-        //     if (result.Succeeded)
-        //     {
-        //         TempData["SuccessMessage"] = "Your email has been updated.";
-        //     }
-        //     else
-        //     {
-        //         TempData["ErrorMessage"] = "Failed to update your email.";
-        //     }
-
-        //     return RedirectToAction(nameof(Index));
-        // }
-
-        // [HttpPost]
-        // public async Task<IActionResult> UpdatePassword(string currentPassword, string newPassword)
-        // {
-        //     if (string.IsNullOrWhiteSpace(currentPassword) || string.IsNullOrWhiteSpace(newPassword))
-        //     {
-        //         TempData["ErrorMessage"] = "Password fields cannot be empty.";
-        //         return RedirectToAction(nameof(Index));
-        //     }
-
-        //     var user = await _userManager.GetUserAsync(User);
-        //     if (user == null) return NotFound();
-
-        //     var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
-
-        //     if (result.Succeeded)
-        //     {
-        //         TempData["SuccessMessage"] = "Your password has been updated.";
-        //     }
-        //     else
-        //     {
-        //         foreach (var error in result.Errors)
-        //         {
-        //             TempData["ErrorMessage"] += error.Description + " ";
-        //         }
-        //     }
-
-        //     return RedirectToAction(nameof(Index));
-        // }
     }
 }
