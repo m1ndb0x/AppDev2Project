@@ -5,15 +5,15 @@
     Layout = "_DashboardLayout";
     var questionsCount = Model.Questions.Count();
     var progress = ViewData["ExamProgress"] as ExamProgress;
-    var startTime = progress?.StartedAt ?? DateTime.Now; // Simplified to DateTime.Now
+    var startTime = progress?.StartedAt ?? DateTime.Now;
     var savedAnswers = progress?.SavedAnswers ?? "{}";
     
-    // Add debug logging
-    System.Diagnostics.Debug.WriteLine($"Exam duration from model: {Model.Duration} minutes");
-    
-    // Add timezone debug logging
-    System.Diagnostics.Debug.WriteLine($"Server time: {DateTime.Now}");
-    System.Diagnostics.Debug.WriteLine($"Server UTC time: {DateTime.UtcNow}");
+    // Calculate time remaining using the same logic as dashboard
+    var endTime = startTime.AddMinutes(Model.Duration);
+    var timeLeft = endTime - DateTime.Now;
+    var initialTimeLeftFormatted = timeLeft.TotalSeconds > 0 
+        ? $"{Math.Floor(timeLeft.TotalHours):00}:{timeLeft.Minutes:00}:{timeLeft.Seconds:00}"
+        : "Time's up!";
 }
 
 <div class="container mx-auto px-4 py-8">
@@ -194,30 +194,55 @@
 @section Scripts {
     <script>
         // Single declaration of exam variables
-        const examDurationMinutes = @Model.Duration;
+        const examEnd = new Date('@endTime.ToString("o")');
         const totalQuestions = @questionsCount;
         let currentQuestion = 0;
-        let remainingSeconds = examDurationMinutes * 60;
         let timerInterval;
         
         // Timer function
         function updateTimer() {
-            if (remainingSeconds <= 0) {
+            const now = new Date();
+            const timeLeft = examEnd - now;
+            
+            if (timeLeft <= 0) {
                 clearInterval(timerInterval);
+                document.getElementById('timer').textContent = "Time's up!";
                 autoSubmitExam();
                 return;
             }
 
-            const hours = Math.floor(remainingSeconds / 3600);
-            const minutes = Math.floor((remainingSeconds % 3600) / 60);
-            const seconds = remainingSeconds % 60;
+            const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
             
             document.getElementById('hours').textContent = String(hours).padStart(2, '0');
             document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
             document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
-            
-            remainingSeconds--;
         }
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize timer
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+
+            // Set initial time display
+            const [hours, minutes, seconds] = '@initialTimeLeftFormatted'.split(':');
+            document.getElementById('hours').textContent = hours;
+            document.getElementById('minutes').textContent = minutes;
+            document.getElementById('seconds').textContent = seconds;
+
+            // Initialize exam state
+            restoreSavedAnswers();
+            showQuestion(0);
+            updateNavigationButtons();
+
+            // Setup auto-save
+            setInterval(autoSaveAnswers, 30000);
+
+            // Initialize event listeners
+            setupListeners();
+        });
 
         // Navigation functions
         function updateNavigationButtons() {
@@ -357,24 +382,6 @@
             // Submit the form
             document.getElementById('examForm').submit();
         }
-
-        // Initialization
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize timer
-            updateTimer();
-            timerInterval = setInterval(updateTimer, 1000);
-
-            // Initialize exam state
-            restoreSavedAnswers();
-            showQuestion(0);
-            updateNavigationButtons();
-
-            // Setup auto-save
-            setInterval(autoSaveAnswers, 30000);
-
-            // Initialize event listeners
-            setupListeners();
-        });
 
         function setupListeners() {
             // Add event listeners for inputs
