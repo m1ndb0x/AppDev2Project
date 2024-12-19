@@ -188,11 +188,12 @@ namespace AppDev2Project.Controllers
                 // Upload to Azure Blob Storage
                 using (var stream = model.ProfilePictureFile.OpenReadStream())
                 {
-                    await _blobStorageService.UploadFileAsync("examina", fileName, stream);
+                    await _blobStorageService.UploadFileAsync("examinablob", fileName, stream);
                 }
 
                 // Update user profile with new image URL
-                user.ProfilePictureUrl = _blobStorageService.GetBlobUrl("examina", fileName);
+                user.ProfilePictureUrl = _blobStorageService.GetBlobUrl("examinablob", fileName);
+
                 await _userManager.UpdateAsync(user);
 
                 TempData["SuccessMessage"] = "Profile picture updated successfully.";
