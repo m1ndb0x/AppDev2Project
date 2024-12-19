@@ -14,26 +14,56 @@
     <div class="bg-white rounded-lg shadow overflow-hidden">
         <div class="p-6">
             <div class="grid grid-cols-1 gap-6">
-                @foreach (var exam in Model)
+                @foreach (var exam in Model.Where(e => !e.HasStarted))
                 {
                     <div class="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div class="flex justify-between items-center">
-                            <div>
+                        <div class="flex justify-between items-start">
+                            <div class="space-y-2">
                                 <h3 class="text-lg font-medium text-gray-900">@exam.Title</h3>
-                                <p class="text-sm text-gray-500">@exam.Subject</p>
-                                <p class="text-sm text-gray-500 mt-1">
-                                    Questions: @(exam.Questions?.Count ?? 0) | Duration: @exam.Duration minutes
-                                </p>
+                                <p class="text-sm text-gray-500">Subject: @exam.Subject</p>
+                                <div class="flex space-x-4">
+                                    <p class="text-sm text-gray-500">
+                                        <span class="font-medium">Questions:</span> 
+                                        @(exam.Questions != null ? exam.Questions.Count : 0)
+                                    </p>
+                                    <p class="text-sm text-gray-500">
+                                        <span class="font-medium">Duration:</span> 
+                                        @exam.Duration minutes
+                                    </p>
+                                    <p class="text-sm text-gray-500">
+                                        <span class="font-medium">Total Score:</span> 
+                                        @exam.TotalScoreWeight points
+                                    </p>
+                                </div>
+                                @if (!string.IsNullOrEmpty(exam.Description))
+                                {
+                                    <p class="text-sm text-gray-600">@exam.Description</p>
+                                }
                             </div>
-                            <form asp-action="AssignExamToStudent" method="post">
-                                <input type="hidden" name="examId" value="@exam.Id" />
-                                <input type="hidden" name="studentId" value="@student.Id" />
-                                <button type="submit" 
-                                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
-                                    Assign Exam
-                                </button>
-                            </form>
+                            @if (!exam.AssignedStudents.Any(s => s.Id == student.Id))
+                            {
+                                <form asp-action="AssignExamToStudent" method="post" class="ml-4">
+                                    <input type="hidden" name="examId" value="@exam.Id" />
+                                    <input type="hidden" name="studentId" value="@student.Id" />
+                                    <button type="submit" 
+                                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+                                        Assign Exam
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <span class="inline-flex items-center px-4 py-2 text-sm text-gray-500">
+                                    Already Assigned
+                                </span>
+                            }
                         </div>
+                    </div>
+                }
+                @if (!Model.Any(e => !e.HasStarted))
+                {
+                    <div class="text-center py-8 text-gray-500">
+                        No available exams to assign at this time.
                     </div>
                 }
             </div>

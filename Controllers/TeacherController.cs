@@ -54,9 +54,9 @@ namespace AppDev2Project.Controllers
                     .ToListAsync();
 
                 ViewBag.TotalExams = exams.Count;
-                ViewBag.ActiveExams = activeExams;  // Use the new activeExams count
-                ViewBag.TotalQuestions = exams.Sum(e => e.Questions.Count);  // Calculate total questions
-                ViewBag.RecentExams = recentExams;  // Set the RecentExams property
+                ViewBag.ActiveExams = activeExams;
+                ViewBag.TotalQuestions = exams.Sum(e => e.Questions.Count);
+                ViewBag.RecentExams = recentExams;
                 ViewBag.RecentSubmissions = await _context.CompletedExams
                     .Include(ce => ce.Exam)
                     .Include(ce => ce.User)
@@ -138,6 +138,26 @@ namespace AppDev2Project.Controllers
                 .ToListAsync();
             
             return View("Students", students);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> AssignExam(int studentId)
+        {
+            var student = await _context.Users.FindAsync(studentId);
+            if (student == null)
+            {
+                return NotFound();
+            }
+
+            var exams = await _context.Exams
+                .Include(e => e.Questions)
+                .Include(e => e.AssignedStudents)
+                .Where(e => e.TeacherId == int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)))
+                .OrderByDescending(e => e.CreatedAt)
+                .ToListAsync();
+
+            ViewBag.Student = student;
+            return View(exams);
         }
 
         public async Task<IActionResult> AssignExam(string studentId)
