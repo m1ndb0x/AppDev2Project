@@ -1,0 +1,208 @@
+@model AppDev2Project.Models.SettingsViewModel
+@{
+    ViewData["Title"] = "User Settings";
+    Layout = "_DashboardLayout";
+}
+
+<div class="min-h-screen bg-gray-50 py-12">
+    <div class="max-w-2xl mx-auto">
+        <!-- Page Title -->
+        <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">Account Settings</h1>
+
+        <div class="space-y-6">
+            <!-- Profile Section -->
+            <div class="bg-white rounded-xl shadow-sm p-8 transition duration-300 hover:shadow-md">
+                <form asp-action="UpdateName" method="post" class="space-y-4">
+                    <div asp-validation-summary="ModelOnly" class="text-red-600 text-sm mb-4"></div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-xl font-semibold text-gray-900">Personal Information</h4>
+                        <span class="text-sm text-gray-500">These are your basic profile details</span>
+                    </div>
+                    <div class="grid gap-6">
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
+                            <div class="mt-1 relative rounded-md shadow-sm">
+                                <input id="name" name="name" type="text"
+                                    class="block w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
+                                    value="@Model.Name" placeholder="Enter your name" />
+                            </div>
+                        </div>
+                        <button type="submit"
+                            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition duration-150">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Email Section -->
+            <div class="bg-white rounded-xl shadow-sm p-8 transition duration-300 hover:shadow-md">
+                <form asp-action="UpdateEmail" method="post" class="space-y-4">
+                    <div asp-validation-summary="ModelOnly" class="text-red-600 text-sm mb-4"></div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-xl font-semibold text-gray-900">Email Address</h4>
+                        <span class="text-sm text-gray-500">Your primary contact email</span>
+                    </div>
+                    <div class="grid gap-6">
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                            <div class="mt-1 relative rounded-md shadow-sm">
+                                <input id="email" name="email" type="email"
+                                    class="block w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
+                                    value="@Model.Email" placeholder="Enter your email" />
+                            </div>
+                        </div>
+                        <button type="submit"
+                            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition duration-150">
+                            Update Email
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Password Section -->
+            <div class="bg-white rounded-xl shadow-sm p-8 transition duration-300 hover:shadow-md">
+                <form asp-action="UpdatePassword" method="post" class="space-y-4">
+                    <div asp-validation-summary="ModelOnly" class="text-red-600 text-sm mb-4"></div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-xl font-semibold text-gray-900">Security</h4>
+                        <span class="text-sm text-gray-500">Manage your password</span>
+                    </div>
+                    <div class="grid gap-6">
+                        <div>
+                            <label for="currentPassword" class="block text-sm font-medium text-gray-700">Current
+                                Password</label>
+                            <div class="mt-1 relative rounded-md shadow-sm">
+                                <input id="currentPassword" name="currentPassword" type="password"
+                                    class="block w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
+                                    placeholder="Enter current password" />
+                            </div>
+                            <span asp-validation-for="CurrentPassword" class="mt-1 text-sm text-red-600"></span>
+                        </div>
+                        <div>
+                            <label for="newPassword" class="block text-sm font-medium text-gray-700">New
+                                Password</label>
+                            <div class="mt-1 relative rounded-md shadow-sm">
+                                <input id="newPassword" name="newPassword" type="password"
+                                    class="block w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
+                                    placeholder="Enter new password" />
+                            </div>
+                            <span asp-validation-for="NewPassword" class="mt-1 text-sm text-red-600"></span>
+                        </div>
+                        <div>
+                            <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirm
+                                Password</label>
+                            <div class="mt-1 relative rounded-md shadow-sm">
+                                <input id="confirmPassword" name="confirmPassword" type="password"
+                                    class="block w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
+                                    placeholder="Confirm new password" />
+                            </div>
+                            <span asp-validation-for="ConfirmPassword" class="mt-1 text-sm text-red-600"></span>
+                        </div>
+                        <button type="submit"
+                            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition duration-150">
+                            Change Password
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- Delete Account -->
+        <div class="bg-white rounded-xl shadow-sm p-8 transition duration-300 hover:shadow-md">
+            <div class="flex items-center justify-between mb-4">
+                <h4 class="text-xl font-semibold text-red-600">Danger Zone</h4>
+                <span class="text-sm text-gray-500">Permanent account actions</span>
+            </div>
+            <form asp-action="DeleteAccount" method="post" class="space-y-4">
+                <button type="button" onclick="showDeleteModal()"
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150">
+                    Delete Account
+                </button>
+            </form>
+        </div>
+<!-- Delete Account Modal -->
+<div id="deleteModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mt-4">Delete Account</h3>
+            <div class="mt-2 px-7 py-3">
+                <p class="text-sm text-gray-500">This action cannot be undone. Please enter your password to confirm.</p>
+                <form id="deleteAccountForm" asp-action="DeleteAccount" method="post" class="mt-4">
+                    <input type="password" id="confirmDeletePassword" name="password" 
+                           class="mt-2 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" 
+                           placeholder="Enter your password" required />
+                    <div class="flex justify-end space-x-4 mt-4">
+                        <button type="button" onclick="closeDeleteModal()" 
+                                class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                            Cancel
+                        </button>
+                        <button type="submit" id="confirmDeleteBtn" disabled
+                                class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                            Delete Account
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+        <!-- Notifications -->
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div id="successMessage"
+                class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transition-opacity duration-300">
+                @TempData["SuccessMessage"]
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div id="errorMessage"
+                class="fixed bottom-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg transition-opacity duration-300">
+                @TempData["ErrorMessage"]
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    setTimeout(function () {
+        const messages = document.querySelectorAll('#successMessage, #errorMessage');
+        messages.forEach(msg => {
+            msg.style.opacity = '0';
+            setTimeout(() => msg.remove(), 300);
+        });
+    }, 5000);
+
+
+        function showDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.add('hidden');
+        document.getElementById('confirmDeletePassword').value = '';
+        document.getElementById('confirmDeleteBtn').disabled = true;
+    }
+
+    document.getElementById('confirmDeletePassword').addEventListener('input', function(e) {
+        document.getElementById('confirmDeleteBtn').disabled = e.target.value.length < 6;
+    });
+
+    // Close modal on outside click
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeDeleteModal();
+        }
+    });
+</script>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
