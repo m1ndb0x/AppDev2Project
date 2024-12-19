@@ -306,8 +306,8 @@ namespace AppDev2Project.Controllers
                 {
                     ExamId = id,
                     UserId = userId,
-                    StartedAt = DateTime.Now,
-                    LastUpdated = DateTime.Now,
+                    StartedAt = DateTime.UtcNow, // Store in UTC
+                    LastUpdated = DateTime.UtcNow,
                     SavedAnswers = "{}",
                     IsCompleted = false,
                     IsActive = true
@@ -321,16 +321,7 @@ namespace AppDev2Project.Controllers
                 return RedirectToAction("Dashboard", "Student");
             }
 
-            // Check if time has expired
-            var timeElapsed = DateTime.Now - progress.StartedAt;
-            if (timeElapsed.TotalMinutes > exam.Duration)
-            {
-                await AutoSubmitExam(id, userId);
-                return RedirectToAction("ViewResult", new { id });
-            }
-
             ViewData["ExamProgress"] = progress;
-            ViewData["TimeLeft"] = exam.Duration - timeElapsed.TotalMinutes;
             return View(exam);
         }
 

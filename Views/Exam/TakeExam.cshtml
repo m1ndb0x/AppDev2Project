@@ -5,15 +5,12 @@
     Layout = "_DashboardLayout";
     var questionsCount = Model.Questions.Count();
     var progress = ViewData["ExamProgress"] as ExamProgress;
-    var startTime = progress?.StartedAt ?? DateTime.Now;
+    var timeLeft = progress != null ? 
+        progress.StartedAt.AddMinutes(Model.Duration) - DateTime.UtcNow : 
+        TimeSpan.FromMinutes(Model.Duration);
     var savedAnswers = progress?.SavedAnswers ?? "{}";
-    
-    // Calculate time remaining using the same logic as dashboard
-    var endTime = startTime.AddMinutes(Model.Duration);
-    var timeLeft = endTime - DateTime.Now;
-    var initialTimeLeftFormatted = timeLeft.TotalSeconds > 0 
-        ? $"{Math.Floor(timeLeft.TotalHours):00}:{timeLeft.Minutes:00}:{timeLeft.Seconds:00}"
-        : "Time's up!";
+    var timeLeftTotalSeconds = Math.Max(0, timeLeft.TotalSeconds);
+    var startTimeUtc = progress?.StartedAt ?? DateTime.UtcNow;
 }
 
 <div class="container mx-auto px-4 py-8">
@@ -23,7 +20,7 @@
             <h1 class="text-3xl font-bold">@Model.Title</h1>
             <div id="timer" 
                  class="text-2xl font-bold text-red-600"
-                 data-exam-end="@startTime.AddMinutes(Model.Duration).ToString("o")"
+                 data-exam-end="@startTimeUtc.AddMinutes(Model.Duration).ToString("o")"
                  data-exam-duration="@Model.Duration">
                 <span id="hours">00</span>:<span id="minutes">00</span>:<span id="seconds">00</span>
             </div>
@@ -193,55 +190,47 @@
 
 @section Scripts {
     <script>
-        // Single declaration of exam variables
-        const examEnd = new Date('@endTime.ToString("o")');
+        const timeLeftSeconds = @timeLeftTotalSeconds;
+        let secondsRemaining = timeLeftSeconds;
         const totalQuestions = @questionsCount;
         let currentQuestion = 0;
         let timerInterval;
-        
-        // Timer function
+
         function updateTimer() {
-            const now = new Date();
-            const timeLeft = examEnd - now;
-            
-            if (timeLeft <= 0) {
+            if (secondsRemaining <= 0) {
                 clearInterval(timerInterval);
                 document.getElementById('timer').textContent = "Time's up!";
                 autoSubmitExam();
                 return;
             }
 
-            const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+            const hours = Math.floor(secondsRemaining / 3600);
+            const minutes = Math.floor((secondsRemaining % 3600) / 60);
+            const seconds = Math.floor(secondsRemaining % 60);
             
             document.getElementById('hours').textContent = String(hours).padStart(2, '0');
             document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
             document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+            
+            secondsRemaining--;
         }
 
-        // Initialization
+        // Initialize timer immediately when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize timer
-            updateTimer();
-            timerInterval = setInterval(updateTimer, 1000);
-
-            // Set initial time display
-            const [hours, minutes, seconds] = '@initialTimeLeftFormatted'.split(':');
-            document.getElementById('hours').textContent = hours;
-            document.getElementById('minutes').textContent = minutes;
-            document.getElementById('seconds').textContent = seconds;
-
-            // Initialize exam state
+            updateTimer(); // Update immediately
+            timerInterval = setInterval(updateTimer, 1000); // Then update every second
+            
+            // Rest of your initialization code
             restoreSavedAnswers();
             showQuestion(0);
             updateNavigationButtons();
-
+            setupListeners();
+            
             // Setup auto-save
             setInterval(autoSaveAnswers, 30000);
 
-            // Initialize event listeners
-            setupListeners();
+            // Initial progress check
+            updateProgress();
         });
 
         // Navigation functions
@@ -396,6 +385,17 @@
             document.getElementById('examForm').onsubmit = function(e) {
                 return confirm('Are you sure you want to submit the exam?');
             };
+        }
+
+        function updateProgress() {
+            // Update question navigation visuals
+            document.querySelectorAll('.question-nav').forEach((btn, idx) => {
+                const questionPanel = document.querySelector(`[data-question-index="${idx}"]`);
+                const isAnswered = questionPanel.querySelector('input[type="radio"]:checked, textarea:not(:placeholder-shown)');
+                if (isAnswered) {
+                    btn.classList.add('bg-green-100');
+                }
+            });
         }
     </script>
 }

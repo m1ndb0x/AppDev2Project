@@ -31,11 +31,12 @@
                     @foreach (var progress in Model.ExamProgresses.Where(p => p.IsActive))
                     {
                         var exam = progress.Exam;
-                        var endTime = progress.StartedAt.AddMinutes(exam.Duration);
-                        var timeLeft = endTime - DateTime.Now;
-                        var timeLeftFormatted = timeLeft.TotalSeconds > 0 
-                            ? $"{Math.Floor(timeLeft.TotalHours):00}:{timeLeft.Minutes:00}:{timeLeft.Seconds:00}"
-                            : "Time's up!";
+                        var minutesElapsed = (DateTime.UtcNow - progress.StartedAt).TotalMinutes;
+                        var minutesRemaining = Math.Max(0, exam.Duration - minutesElapsed);
+                        var hours = Math.Floor(minutesRemaining / 60);
+                        var minutes = Math.Floor(minutesRemaining % 60);
+                        var timeLeftFormatted = $"{hours:00}:{minutes:00}";
+                        
                         var answeredCount = !string.IsNullOrEmpty(progress.SavedAnswers) ? 
                             Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(progress.SavedAnswers).Count : 0;
                         var totalQuestions = exam.Questions.Count;
