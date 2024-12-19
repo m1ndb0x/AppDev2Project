@@ -10,6 +10,78 @@
         <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">Account Settings</h1>
 
         <div class="space-y-6">
+            <!-- Profile Picture Section -->
+            <div class="bg-white rounded-xl shadow-sm p-8 transition duration-300 hover:shadow-md mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-xl font-semibold text-gray-900">Profile Picture</h4>
+                    <span class="text-sm text-gray-500">Your profile image</span>
+                </div>
+                <div class="flex flex-col items-center space-y-4">
+                    <div class="w-32 h-32 rounded-full overflow-hidden">
+                        <img id="currentProfilePic" 
+                             src="@(Model.ProfilePictureUrl ?? "https://ui-avatars.com/api/?name=" + Uri.EscapeDataString(Model.Name) + "&background=random&color=fff")" 
+                             alt="Profile Picture" 
+                             class="w-full h-full object-cover" />
+                    </div>
+                    <button type="button" onclick="showImageUploadModal()"
+                            class="w-full sm:w-auto flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition duration-150">
+                        Change Profile Picture
+                    </button>
+                </div>
+            </div>
+
+            <!-- Image Upload Modal -->
+            <div id="imageUploadModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                <div class="relative top-20 mx-auto p-5 w-96 max-w-md shadow-lg rounded-md bg-white">
+                    <div class="mt-3">
+                        <div class="flex justify-between items-start p-4 rounded-t">
+                            <h3 class="text-xl font-semibold text-gray-900">
+                                Update Profile Picture
+                            </h3>
+                            <button type="button" onclick="closeImageUploadModal()" class="text-gray-400 hover:text-gray-500">
+                                <span class="sr-only">Close</span>
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <form asp-action="UpdateProfilePicture" method="post" enctype="multipart/form-data" class="p-4">
+                            <div class="space-y-4">
+                                <div class="flex flex-col items-center">
+                                    <div id="imagePreviewContainer" class="hidden mb-4">
+                                        <img id="imagePreview" class="max-w-full h-48 rounded-lg object-cover" />
+                                    </div>
+                                    <div class="w-full">
+                                        <label class="flex flex-col items-center px-4 py-6 bg-white text-blue rounded-lg shadow-lg tracking-wide uppercase border border-dashed border-teal-600 cursor-pointer hover:bg-teal-50 transition-all">
+                                            <svg class="w-8 h-8 text-teal-600" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                                <path d="M16.88 9.1A4 4 0 0 1 16 17H5a5 5 0 0 1-1-9.9V7a3 3 0 0 1 4.52-2.59A4.98 4.98 0 0 1 17 8c0 .38-.04.74-.12 1.1zM11 11h3l-4-4-4 4h3v3h2v-3z" />
+                                            </svg>
+                                            <span id="fileLabel" class="mt-2 text-sm text-gray-600">Select an image</span>
+                                            <input type="file" 
+                                                   asp-for="ProfilePictureFile" 
+                                                   class="hidden"
+                                                   accept="image/jpeg,image/png"
+                                                   onchange="previewImage(this)" />
+                                        </label>
+                                        <p class="text-xs text-gray-500 mt-2">Maximum file size: 5MB. Supported formats: JPEG, PNG</p>
+                                    </div>
+                                </div>
+                                <div class="flex justify-end space-x-3">
+                                    <button type="button" onclick="closeImageUploadModal()"
+                                            class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                                        Cancel
+                                    </button>
+                                    <button type="submit" id="uploadButton" disabled
+                                            class="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        Upload Image
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
             <!-- Profile Section -->
             <div class="bg-white rounded-xl shadow-sm p-8 transition duration-300 hover:shadow-md">
                 <form asp-action="UpdateName" method="post" class="space-y-4">
@@ -199,6 +271,57 @@
             closeDeleteModal();
         }
     });
+
+        function showImageUploadModal() {
+            document.getElementById('imageUploadModal').classList.remove('hidden');
+        }
+
+        function closeImageUploadModal() {
+            document.getElementById('imageUploadModal').classList.add('hidden');
+            document.getElementById('imagePreviewContainer').classList.add('hidden');
+            document.getElementById('fileLabel').textContent = 'Select an image';
+            document.getElementById('uploadButton').disabled = true;
+        }
+
+        function previewImage(input) {
+            const preview = document.getElementById('imagePreview');
+            const container = document.getElementById('imagePreviewContainer');
+            const fileLabel = document.getElementById('fileLabel');
+            const uploadButton = document.getElementById('uploadButton');
+
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                
+                // Validate file size and type
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('File size must not exceed 5MB');
+                    input.value = '';
+                    return;
+                }
+                
+                if (!['image/jpeg', 'image/png'].includes(file.type.toLowerCase())) {
+                    alert('Only JPEG and PNG files are allowed');
+                    input.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    container.classList.remove('hidden');
+                    fileLabel.textContent = file.name;
+                    uploadButton.disabled = false;
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Close modal on outside click
+        document.getElementById('imageUploadModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeImageUploadModal();
+            }
+        });
 </script>
 
 @section Scripts {

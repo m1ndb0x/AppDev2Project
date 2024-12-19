@@ -19,13 +19,18 @@ namespace AppDev2Project.Services
         // Method to upload a file to Blob
         public async Task UploadFileAsync(string containerName, string fileName, Stream fileStream)
         {
-            var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
-            await containerClient.CreateIfNotExistsAsync(); // Create the container if it doesn't exist
+            try
+            {
+                var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+                await containerClient.CreateIfNotExistsAsync(Azure.Storage.Blobs.Models.PublicAccessType.Blob);
 
-            var blobClient = containerClient.GetBlobClient(fileName);
-            await blobClient.UploadAsync(fileStream, overwrite: true); // Upload the file, overwriting if necessary
-            Console.WriteLine($"Uploaded file: {fileName} to container: {containerName} at {blobClient.Uri}");
-
+                var blobClient = containerClient.GetBlobClient(fileName);
+                await blobClient.UploadAsync(fileStream, true);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to upload blob: {ex.Message}", ex);
+            }
         }
 
         // Method to download a file from Blob Storage
@@ -35,12 +40,13 @@ namespace AppDev2Project.Services
             var blobClient = containerClient.GetBlobClient(fileName);
             await blobClient.DownloadToAsync(destinationStream); // Download the file
         }
-          // Method to get the public URL of a blob
+
+        // Method to get the public URL of a blob
         public string GetBlobUrl(string containerName, string fileName)
         {
             var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
             var blobClient = containerClient.GetBlobClient(fileName);
-            return blobClient.Uri.AbsoluteUri;
+            return blobClient.Uri.ToString();
         }
     }
 }

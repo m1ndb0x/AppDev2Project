@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace AppDev2Project.Models
 {
@@ -22,5 +23,10 @@ namespace AppDev2Project.Models
         [DataType(DataType.Password)]
         [Compare("NewPassword", ErrorMessage = "The new password and confirmation password do not match.")]
         public string? ConfirmPassword { get; set; }
+
+        public string? ProfilePictureUrl { get; set; }
+
+        [DataType(DataType.Upload)]
+        public IFormFile? ProfilePictureFile { get; set; }
     }
 }
