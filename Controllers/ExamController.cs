@@ -563,7 +563,7 @@ namespace AppDev2Project.Controllers
 
             if (exam == null) return NotFound();
 
-            var studentProgress = new Dictionary<int, StudentProgressInfo>();
+            var studentProgress = new Dictionary<int, AppDev2Project.Models.ViewModels.StudentProgressInfo>();
             foreach (var student in exam.AssignedStudents)
             {
                 var progress = exam.StudentProgress.FirstOrDefault(p => p.UserId == student.Id);
@@ -583,13 +583,13 @@ namespace AppDev2Project.Controllers
                         answeredCount = 0;
                     }
 
-                    // Calculate time remaining more precisely
-                    var elapsedTime = DateTime.Now - progress.StartedAt;
-                    var timeRemaining = exam.Duration - elapsedTime.TotalMinutes;
+                    // Calculate time remaining using UTC
+                    var minutesElapsed = (DateTime.UtcNow - progress.StartedAt).TotalMinutes;
+                    var minutesRemaining = Math.Max(0, exam.Duration - minutesElapsed);
                     
                     studentProgress[student.Id] = new StudentProgressInfo
                     {
-                        TimeRemaining = Math.Max(0, timeRemaining),
+                        TimeRemaining = minutesRemaining,
                         LastSaved = progress.LastUpdated.HasValue ? progress.LastUpdated.Value : progress.StartedAt,
                         CompletedQuestions = answeredCount,
                         StartedAt = progress.StartedAt,
@@ -805,12 +805,19 @@ namespace AppDev2Project.Controllers
 
             foreach (var progress in exam.StudentProgress.Where(p => !p.IsCompleted))
             {
-                // Add additional time by adjusting the start time
-                progress.StartedAt = progress.StartedAt.AddMinutes(-additionalMinutes);
+                // Calculate current remaining time
+                var elapsedTime = DateTime.UtcNow - progress.StartedAt;
+                var currentRemainingMinutes = exam.Duration - elapsedTime.TotalMinutes;
+                
+                // Add the additional time to whatever time is remaining
+                var newRemainingMinutes = currentRemainingMinutes + additionalMinutes;
+                
+                // Calculate new start time by working backwards from now
+                progress.StartedAt = DateTime.UtcNow.AddMinutes(-exam.Duration + newRemainingMinutes);
             }
 
             await _context.SaveChangesAsync();
-            TempData["Success"] = $"Extended exam time by {additionalMinutes} minutes for all active students.";
+            TempData["Success"] = $"Added {additionalMinutes} minutes to all active students.";
             return RedirectToAction(nameof(TrackProgress), new { id = examId });
         }
 

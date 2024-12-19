@@ -103,7 +103,12 @@
                                 @if (progress != null)
                                 {
                                     <div class="text-sm text-gray-900">
-                                        @progress.GetFormattedTimeRemaining()
+                                        @{
+                                            var hours = Math.Floor(progress.TimeRemaining / 60);
+                                            var minutes = Math.Floor(progress.TimeRemaining % 60);
+                                            var timeLeftFormatted = $"{hours:00}:{minutes:00}";
+                                        }
+                                        @timeLeftFormatted
                                     </div>
                                 }
                                 else
