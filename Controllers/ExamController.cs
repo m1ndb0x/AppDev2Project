@@ -994,15 +994,41 @@ namespace AppDev2Project.Controllers
 
             try
             {
-                if (string.IsNullOrEmpty(question.CorrectAnswer) || 
-                    !Regex.IsMatch(question.CorrectAnswer.ToUpper(), "^[A-D]$"))
+                // Validate based on question type
+                switch (question.QuestionType)
                 {
-                    ModelState.AddModelError("CorrectAnswer", "Please select a valid answer (A-D)");
-                    return View("Create", question);
-                }
+                    case "multiple_choice":
+                        if (string.IsNullOrEmpty(question.CorrectAnswer) || 
+                            !Regex.IsMatch(question.CorrectAnswer.ToUpper(), "^[A-D]$"))
+                        {
+                            ModelState.AddModelError("CorrectAnswer", "Please select a valid answer (A-D)");
+                            return View("Create", question);
+                        }
+                        question.CorrectAnswer = question.CorrectAnswer.ToUpper();
+                        break;
 
-                question.CorrectAnswer = question.CorrectAnswer.ToUpper();
-                question.QuestionType = "multiple_choice"; // Force multiple choice type
+                    case "true_false":
+                        if (string.IsNullOrEmpty(question.CorrectAnswer) || 
+                            !Regex.IsMatch(question.CorrectAnswer.ToLower(), "^(true|false)$"))
+                        {
+                            ModelState.AddModelError("CorrectAnswer", "Please select either True or False");
+                            return View("Create", question);
+                        }
+                        question.CorrectAnswer = question.CorrectAnswer.ToLower();
+                        break;
+
+                    case "short_answer":
+                        if (string.IsNullOrEmpty(question.CorrectAnswer))
+                        {
+                            ModelState.AddModelError("CorrectAnswer", "Please provide the expected answer");
+                            return View("Create", question);
+                        }
+                        break;
+
+                    default:
+                        ModelState.AddModelError("", "Invalid question type");
+                        return View("Create", question);
+                }
                 
                 _context.Questions.Add(question);
                 await _context.SaveChangesAsync();

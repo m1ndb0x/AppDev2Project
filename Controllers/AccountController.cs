@@ -42,10 +42,10 @@ namespace AppDev2Project.Controllers
 
                 var user = new User
                 {
-                    UserName = model.Email, // Use email as username for Identity
+                    UserName = model.Email,
                     Email = model.Email,
-                    Name = model.Name,      // Name can contain spaces
-                    Role = model.Role, // Assuming you added Role to RegisterViewModel
+                    Name = model.Name,
+                    Role = model.Role,
                     ProfilePictureUrl = $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(initials)}&background=random&color=fff&size=256" // Set default PFP
                 };
 

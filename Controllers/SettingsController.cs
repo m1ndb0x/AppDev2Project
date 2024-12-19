@@ -205,6 +205,43 @@ namespace AppDev2Project.Controllers
             }
         }
 
+        [HttpPost]
+        public async Task<IActionResult> RemoveProfilePicture()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound();
+
+            try
+            {
+                // Generate initials from name
+                var nameParts = user.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                string initials;
+                
+                if (nameParts.Length >= 2)
+                {
+                    // Take first letter of first name and first letter of last name
+                    initials = $"{nameParts[0][0]}{nameParts[^1][0]}".ToUpper();
+                }
+                else
+                {
+                    // If only one name, take first letter
+                    initials = nameParts[0][0].ToString().ToUpper();
+                }
+
+                // Set default avatar URL with initials
+                user.ProfilePictureUrl = $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(initials)}&background=random&color=fff&size=256";
+                
+                await _userManager.UpdateAsync(user);
+                TempData["SuccessMessage"] = "Profile picture removed successfully.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Failed to remove profile picture. Please try again.";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
         private bool IsValidImage(IFormFile file)
         {
             if (file.Length > 5 * 1024 * 1024) // 5MB limit
