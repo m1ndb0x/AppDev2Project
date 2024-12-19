@@ -1,8 +1,22 @@
 @model AppDev2Project.Models.LoginViewModel
 
+@{
+    ViewData["Title"] = "Login";
+    Layout = "_DashboardLayout";
+}
+
 <div class="min-h-screen flex flex-col items-center justify-center p-6">
     <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
         <h2 class="text-3xl font-bold text-teal-600 mb-6 text-center">Login</h2>
+        
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                @TempData["ErrorMessage"]
+            </div>
+        }
+        <div asp-validation-summary="All" class="text-red-500 text-sm mb-4"></div>
+
         <form asp-controller="Account" asp-action="Login" method="post" class="space-y-4">
             <div class="space-y-2">
                 <label asp-for="Email" class="block text-sm font-medium text-gray-700"></label>

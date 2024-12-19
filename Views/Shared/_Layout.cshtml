@@ -4,7 +4,7 @@
     @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>@ViewData["Title"] - AppDev2Project</title>
+    <title>@ViewData["Title"] - Examina</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="~/css/output.css" asp-append-version="true"/>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
@@ -13,34 +13,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body class="h-full">
-    <partial name="_Toast" />
-    <header>
-        <nav class="bg-white shadow-sm border-b border-teal-100">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-16">
-                    <div class="flex items-center">
-                        <a asp-controller="Home" asp-action="Index" class="text-2xl font-bold text-teal-600 hover:text-teal-700">Examina</a>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        @if (User.Identity != null && User.Identity.IsAuthenticated)
-                        {
-                            <a asp-controller="Teacher" asp-action="Dashboard" class="px-3 py-2 rounded-md text-base font-medium text-teal-600 hover:text-teal-700 hover:bg-teal-50">Teacher Dashboard</a>
-                            <a asp-controller="Student" asp-action="Dashboard" class="px-3 py-2 rounded-md text-base font-medium text-teal-600 hover:text-teal-700 hover:bg-teal-50">Student Dashboard</a>
-                            <a asp-controller="Account" asp-action="Logout" class="px-3 py-2 rounded-md text-base font-medium text-coral-600 hover:text-coral-700 hover:bg-coral-50">Logout</a>
-                        }
-                        else
-                        {
-                            <a asp-controller="Account" asp-action="Login" class="px-3 py-2 rounded-md text-base font-medium text-teal-600 hover:text-teal-700 hover:bg-teal-50">Login</a>
-                            <a asp-controller="Account" asp-action="Register" class="px-3 py-2 rounded-md text-base font-medium text-teal-600 hover:text-teal-700 hover:bg-teal-50">Register</a>
-                        }
-                    </div>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="flex-1">
-        <main role="main" class="h-full">@RenderBody()</main>
-    </div>
+    @RenderBody()
+    
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

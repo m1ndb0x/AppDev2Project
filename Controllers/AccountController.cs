@@ -101,39 +101,39 @@ namespace AppDev2Project.Controllers
             if (ModelState.IsValid)
             {
                 var user = await _userManager.FindByEmailAsync(model.Email);
-                if (user != null)
+                var result = await _signInManager.PasswordSignInAsync(user ?? new User(), model.Password, model.RememberMe, false);
+                
+                if (result.Succeeded)
                 {
-                    var result = await _signInManager.PasswordSignInAsync(user, model.Password, model.RememberMe, false);
-                    if (result.Succeeded)
+                    // Create claims principal with additional claims
+                    var claims = new List<Claim>
                     {
-                        // Create claims principal with additional claims
-                        var claims = new List<Claim>
-                        {
-                            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                            new Claim(ClaimTypes.Role, user.Role)
-                        };
+                        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                        new Claim(ClaimTypes.Role, user.Role)
+                    };
 
-                        await _signInManager.SignInWithClaimsAsync(user, model.RememberMe, claims);
+                    await _signInManager.SignInWithClaimsAsync(user, model.RememberMe, claims);
 
-                        _logger.LogInformation($"User {model.Email} logged in successfully.");
-                        if (user.Role == "Teacher")
-                        {
-                            // Razor Page path for Teacher Dashboard
-                            return RedirectToAction("Dashboard", "Teacher");
-                        }
-                        else if (user.Role == "Student")
-                        {
-                            // Razor Page path for Student Dashboard
-                            return RedirectToAction("Dashboard", "Student");
-                        }
-                        else
-                        {
-                            return RedirectToAction("Index", "Home");
-                        }
+                    _logger.LogInformation($"User {model.Email} logged in successfully.");
+                    if (user.Role == "Teacher")
+                    {
+                        // Razor Page path for Teacher Dashboard
+                        return RedirectToAction("Dashboard", "Teacher");
+                    }
+                    else if (user.Role == "Student")
+                    {
+                        // Razor Page path for Student Dashboard
+                        return RedirectToAction("Dashboard", "Student");
+                    }
+                    else
+                    {
+                        return RedirectToAction("Index", "Home");
                     }
                 }
+                
+                ModelState.AddModelError(string.Empty, "Invalid email or password.");
+                return View("~/Views/Account/Login.cshtml");
             }
-            ModelState.AddModelError(string.Empty, "Invalid login attempt.");
             return View("~/Views/Account/Login.cshtml");
         }
 
