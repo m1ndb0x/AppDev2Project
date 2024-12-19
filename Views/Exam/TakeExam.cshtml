@@ -5,7 +5,7 @@
     Layout = "_DashboardLayout";
     var questionsCount = Model.Questions.Count();
     var progress = ViewData["ExamProgress"] as ExamProgress;
-    var startTime = progress?.StartedAt ?? DateTime.Now;
+    var startTime = progress?.StartedAt ?? DateTime.Now; // Simplified to DateTime.Now
     var savedAnswers = progress?.SavedAnswers ?? "{}";
     
     // Add debug logging
@@ -195,28 +195,28 @@
     <script>
         // Single declaration of exam variables
         const examDurationMinutes = @Model.Duration;
-        const examStartTime = new Date('@startTime.ToString("o")');
         const totalQuestions = @questionsCount;
         let currentQuestion = 0;
+        let remainingSeconds = examDurationMinutes * 60;
+        let timerInterval;
         
         // Timer function
         function updateTimer() {
-            const now = new Date();
-            const timeLeft = examStartTime.getTime() + (examDurationMinutes * 60 * 1000) - now.getTime();
-            
-            if (timeLeft <= 0) {
+            if (remainingSeconds <= 0) {
                 clearInterval(timerInterval);
                 autoSubmitExam();
                 return;
             }
 
-            const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+            const hours = Math.floor(remainingSeconds / 3600);
+            const minutes = Math.floor((remainingSeconds % 3600) / 60);
+            const seconds = remainingSeconds % 60;
             
             document.getElementById('hours').textContent = String(hours).padStart(2, '0');
             document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
             document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+            
+            remainingSeconds--;
         }
 
         // Navigation functions
@@ -362,7 +362,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize timer
             updateTimer();
-            setInterval(updateTimer, 1000);
+            timerInterval = setInterval(updateTimer, 1000);
 
             // Initialize exam state
             restoreSavedAnswers();
