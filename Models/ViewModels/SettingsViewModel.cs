@@ -16,5 +16,9 @@ namespace AppDev2Project.Models
         [DataType(DataType.Password)]
         [Compare("NewPassword", ErrorMessage = "Passwords do not match.")]
         public string ConfirmPassword { get; set; }
+       public string ProfilePictureUrl { get; set; }
+
+        [DataType(DataType.Upload)]
+        public IFormFile? ProfilePictureFile { get; set; }
     }
 }

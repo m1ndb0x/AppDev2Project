@@ -24,6 +24,8 @@ namespace AppDev2Project.Services
 
             var blobClient = containerClient.GetBlobClient(fileName);
             await blobClient.UploadAsync(fileStream, overwrite: true); // Upload the file, overwriting if necessary
+            Console.WriteLine($"Uploaded file: {fileName} to container: {containerName} at {blobClient.Uri}");
+
         }
 
         // Method to download a file from Blob Storage

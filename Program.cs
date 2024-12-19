@@ -33,8 +33,21 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddSingleton<DatabaseConnectionStatus>();
 
 // Add Azure Blob service for accessing Blob storage
-builder.Services.AddSingleton(x => new BlobServiceClient(
-    builder.Configuration["BlobStorageConnectionString"]));
+builder.Services.AddSingleton(x =>
+{
+    var configuration = x.GetRequiredService<IConfiguration>();
+    var connectionString = configuration["AzureBlobStorage:ConnectionString"];
+
+    Console.WriteLine($"BlobStorageConnectionString: {connectionString}");
+
+
+    if (string.IsNullOrEmpty(connectionString))
+    {
+        throw new ArgumentNullException(nameof(connectionString), "Blob Storage connection string is not configured.");
+    }
+    return new BlobServiceClient(connectionString);
+});
+
 
 // Update the authentication configuration
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
