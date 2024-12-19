@@ -9,6 +9,26 @@
         <!-- Page Title -->
         <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">Account Settings</h1>
 
+
+@* 
+<div class="profile-picture-section mb-4">
+    <h4 class="text-xl font-semibold text-teal-600">Profile Picture</h4>
+    <div class="mb-2">
+        <label>Current Profile Picture:</label>
+        <img src="@Model.ProfilePictureUrl" alt="Profile Picture" class="img-thumbnail" style="max-width: 150px; border-radius: 50%;" />
+    </div>
+
+    <form asp-action="UpdateProfilePicture" asp-controller="Settings" method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="ProfilePictureFile" class="block text-sm font-medium text-gray-700">Upload New Profile Picture</label>
+            <input type="file" name="ProfilePictureFile" id="ProfilePictureFile" class="form-control mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm" />
+        </div>
+        <button type="submit" class="btn btn-primary mt-2 inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-md">Update Profile Picture</button>
+    </form>
+    <div asp-validation-summary="ModelOnly" class="text-danger mt-2"></div>
+</div>
+
+ *@
         <div class="space-y-6">
             <!-- Profile Section -->
             <div class="bg-white rounded-xl shadow-sm p-8 transition duration-300 hover:shadow-md">
