@@ -71,6 +71,10 @@ public partial class Exam
     
     public int GetSubmissionCount()
     {
-        return CompletedExams.Count(ce => ce.IsSubmitted);
+        if (CompletedExams == null || !CompletedExams.Any())
+            return 0;
+        
+        return CompletedExams.Count(ce => ce.IsSubmitted && 
+            ce.CompletedAt <= (StartedAt?.AddMinutes(Duration) ?? DateTime.MaxValue));
     }
 }

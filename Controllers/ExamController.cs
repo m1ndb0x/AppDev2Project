@@ -898,9 +898,14 @@ namespace AppDev2Project.Controllers
                     .ThenInclude(ce => ce.User)
                 .Include(e => e.Questions)
                 .Include(e => e.QuestionAttempts)
+                .Include(e => e.AssignedStudents)  // Add this to ensure AssignedStudents is loaded
+                .AsNoTracking()
                 .FirstOrDefaultAsync(e => e.Id == id);
 
-            if (exam == null) return NotFound();
+            if (exam == null) 
+            {
+                return NotFound();
+            }
             
             return View(exam);
         }
